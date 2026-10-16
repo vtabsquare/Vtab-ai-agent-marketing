@@ -168,7 +168,9 @@ class PublisherBot:
         if not platforms: raise CheckFailure('No connected publishing destination is selected for this workflow.')
         from .integrations import Channel
         writing=campaign['results']['writing']['output']
-        variants={item['channel']:item for item in writing.get('variants',[])}; receipts=[]
+        variants={item['channel']:item for item in writing.get('variants',[])}
+        receipts = []
+        errors = []
         for platform in platforms:
             operation=campaign['operation_id']+':'+approved_hash+':'+platform
             with self.store.transaction() as db:
@@ -183,15 +185,24 @@ class PublisherBot:
             image_data = rasterize_brand_card(campaign, raw_image)
             try:
                 receipt=Channel(platform,self.store.settings().get('social_keys',{})).publish(text, image_b64=image_data)
-            except Exception:
+                with self.store.transaction() as db:
+                    db.execute('UPDATE publications SET status=?,payload=? WHERE id=?',('confirmed',json.dumps(receipt),operation))
+                receipts.append(receipt)
+            except Exception as exc:
                 with self.store.transaction() as db:
                     db.execute('DELETE FROM publications WHERE id=? AND status=?',(operation,'submitting'))
-                raise
-            with self.store.transaction() as db:
-                db.execute('UPDATE publications SET status=?,payload=? WHERE id=?',('confirmed',json.dumps(receipt),operation))
-            receipts.append(receipt)
+                errors.append(f"{platform}: {str(exc)}")
+
+        if not receipts and errors:
+            raise CheckFailure("; ".join(errors))
+
+        published_names = [r['platform'] for r in receipts]
+        msg = f"Publication confirmed on {', '.join(published_names)}."
+        if errors:
+            msg += f" (Notice: {'; '.join(errors)})"
+
         result={'mode':'live','status':'published','receipts':receipts,'content_hash':approved_hash,
-                'message':'Publication confirmed by '+', '.join(platforms)+'. Media attachments depend on connector capabilities.'}
+                'message': msg}
         return result
 
 
