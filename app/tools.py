@@ -91,46 +91,65 @@ def brand_card(c):
         svg+=art(56,195,455,720)+lines(title,567,330,455,64,5)
         svg+=f'<rect x="567" y="760" width="455" height="96" rx="48" fill="{accent}"/><text x="794" y="822" text-anchor="middle" fill="{primary}" font-size="36" font-weight="700">{price}</text>'
     return svg+'</g></svg>'
-def rasterize_brand_card(c, image_b64):
-    if not image_b64 or not image_b64.startswith('data:image/png;base64,'): return image_b64
+def rasterize_brand_card(c, image_b64=None):
     import base64, io, textwrap
     from PIL import Image, ImageDraw, ImageFont
-    
+
     b=c['snapshot']['brand']
     creative=c.get('results',{}).get('creative',{}).get('output',{})
     writing=c.get('results',{}).get('writing',{}).get('output',{})
     title=creative.get('headline',writing.get('headline','Your next chapter'))
     name=b['name'].upper(); price=b['price']
-    
+
+    def hex2rgb(h, default=(23, 37, 84)):
+        try: return tuple(int(h.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+        except: return default
+
+    accent = hex2rgb(creative.get('accent_hex','#38bdf8'), (56, 189, 248))
+    primary = hex2rgb(creative.get('primary_hex','#172554'), (23, 37, 84))
+
+    if image_b64 and image_b64.startswith('data:image/png;base64,'):
+        try:
+            img = Image.open(io.BytesIO(base64.b64decode(image_b64.split(',', 1)[1]))).convert('RGBA')
+            w, h = img.size
+            img = img.crop((0, 0, w, int(h * 0.955))).resize((1080, 1080))
+        except Exception:
+            img = None
+    else:
+        img = None
+
+    if not img:
+        img = Image.new('RGBA', (1080, 1080), primary)
+        draw_bg = ImageDraw.Draw(img)
+        for r in range(540, 0, -4):
+            factor = 1.0 - (r / 540.0)
+            c_rgb = (int(primary[0] + (accent[0]-primary[0]) * factor * 0.6),
+                     int(primary[1] + (accent[1]-primary[1]) * factor * 0.6),
+                     int(primary[2] + (accent[2]-primary[2]) * factor * 0.6), 255)
+            draw_bg.ellipse([(540 - r, 540 - r), (540 + r, 540 + r)], fill=c_rgb)
+
+    overlay = Image.new('RGBA', (1080, 1080), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+
     try:
-        f_head = ImageFont.truetype("app/Roboto-Bold.ttf", 64)
+        f_head = ImageFont.truetype("app/Roboto-Bold.ttf", 60)
         f_name = ImageFont.truetype("app/Roboto-Bold.ttf", 30)
         f_price = ImageFont.truetype("app/Roboto-Bold.ttf", 38)
     except:
         f_head = f_name = f_price = ImageFont.load_default()
 
-    img = Image.open(io.BytesIO(base64.b64decode(image_b64.split(',', 1)[1]))).convert('RGBA')
-    w, h = img.size
-    img = img.crop((0, 0, w, int(h * 0.955))).resize((1080, 1080))
-    overlay = Image.new('RGBA', img.size, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay)
-    
-    def hex2rgb(h): return tuple(int(h.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-    accent = hex2rgb(creative.get('accent_hex','#38bdf8'))
-    primary = hex2rgb(creative.get('primary_hex','#172554'))
-
-    draw.rectangle([(0, 0), (1080, 1080)], fill=(6, 9, 28, 90)) # darken bg a bit
+    draw.rectangle([(0, 0), (1080, 1080)], fill=(6, 9, 28, 80)) # darken
     draw.text((64, 110), name, fill=accent, font=f_name)
-    
-    y = 510
+
+    y = 480
     for line in textwrap.wrap(title, width=28):
         draw.text((64, y), line, fill=(255, 255, 255), font=f_head)
-        y += 80
-        
+        y += 75
+
     draw.rounded_rectangle([(64, 870), (514, 966)], radius=48, fill=accent)
     draw.text((289, 918), price, fill=primary, font=f_price, anchor="mm")
-    
-    out = Image.alpha_composite(img, overlay).convert('RGB')
+
+    out = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
     buf = io.BytesIO()
     out.save(buf, format='PNG')
     return 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
@@ -160,8 +179,8 @@ class PublisherBot:
                 db.execute('INSERT INTO publications VALUES(?,?,?)',(operation,'submitting',None))
             variant=variants.get(platform)
             text=(variant['headline']+'\n\n'+variant['body']) if variant else writing['headline']+'\n\n'+writing['caption']
-            image_data = campaign.get('results', {}).get('creative', {}).get('image')
-            if image_data: image_data = rasterize_brand_card(campaign, image_data)
+            raw_image = campaign.get('results', {}).get('creative', {}).get('image')
+            image_data = rasterize_brand_card(campaign, raw_image)
             try:
                 receipt=Channel(platform,self.store.settings().get('social_keys',{})).publish(text, image_b64=image_data)
             except Exception:

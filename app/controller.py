@@ -248,7 +248,7 @@ class Controller:
                         pass
         except Exception as exc:
             kind=getattr(exc,'kind','check' if isinstance(exc,CheckFailure) else 'invalid_output' if isinstance(exc,ValueError) else 'execution')
-            message=str(exc) if isinstance(exc,(ProviderError,CheckFailure)) else 'Task execution failed. Review the configuration and evidence.'
+            message=str(exc) if str(exc).strip() else 'Task execution failed. Review the configuration and evidence.'
             message=redact(message,get_key(self.store))
             def failed(c,t,node):
                 error={'role':role,'kind':kind,'message':message}; node.update(state='BLOCKED',error=error); t['status']='FAILED'; c['error']=error

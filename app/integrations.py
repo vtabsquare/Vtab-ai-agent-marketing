@@ -10,6 +10,17 @@ from .tools import CheckFailure, metrics_fixture
 from .providers import ProviderError
 
 
+def check_status(response, platform_name):
+    if response.status_code >= 400:
+        err_msg = response.text
+        try:
+            err_json = response.json()
+            err_msg = err_json.get('error', {}).get('message') or err_json.get('message') or err_msg
+        except Exception:
+            pass
+        raise CheckFailure(f'{platform_name} error: {err_msg}')
+
+
 def generate_image(prompt, snapshot, settings):
     provider = snapshot.get('image_provider', 'template')
     if provider == 'template': return None
@@ -77,7 +88,7 @@ class Channel:
             else:
                 response = httpx.post(webhook, params={'wait':'true'}, json=payload, timeout=30)
             
-            response.raise_for_status()
+            check_status(response, 'Discord')
             response_payload = response.json()
             post_id = response_payload.get('id')
             if not post_id: raise CheckFailure('Discord did not return a confirmed message ID.')
@@ -89,7 +100,7 @@ class Channel:
             if not token: raise CheckFailure('Save an X user access token with write permission first.')
             response = httpx.post('https://api.x.com/2/tweets',
                                   headers={'Authorization':'Bearer '+token}, json={'text':text}, timeout=30)
-            response.raise_for_status()
+            check_status(response, 'X / Twitter')
             post_id = response.json().get('data',{}).get('id')
             if not post_id: raise CheckFailure('X did not return a confirmed post ID.')
             return {'platform':'twitter','post_id':str(post_id),'status':'published',
@@ -107,7 +118,7 @@ class Channel:
                                   headers={'Authorization':'Bearer '+token,'LinkedIn-Version':'202506',
                                            'X-Restli-Protocol-Version':'2.0.0','Content-Type':'application/json'},
                                   json=payload,timeout=30)
-            response.raise_for_status()
+            check_status(response, 'LinkedIn')
             post_id=response.headers.get('x-restli-id') or response.headers.get('X-RestLi-Id')
             if not post_id: raise CheckFailure('LinkedIn did not return a confirmed post ID.')
             return {'platform':'linkedin','post_id':post_id,'status':'published','url':None}
@@ -128,7 +139,7 @@ class Channel:
                 response = httpx.post(f'https://graph.facebook.com/v21.0/{page_id}/feed',
                                       data={'message': text, 'access_token': token},
                                       timeout=30)
-            response.raise_for_status()
+            check_status(response, 'Facebook')
             data = response.json()
             post_id = data.get('post_id') or data.get('id')
             if not post_id: raise CheckFailure('Facebook did not return a confirmed post ID.')
@@ -222,7 +233,7 @@ class Channel:
                 data={'image_url': image_url, 'caption': text, 'access_token': token},
                 timeout=30
             )
-            container_resp.raise_for_status()
+            check_status(container_resp, 'Instagram container')
             creation_id = container_resp.json().get('id')
             if not creation_id:
                 raise CheckFailure('Instagram container creation failed: ' + container_resp.text)
@@ -248,7 +259,7 @@ class Channel:
                 data={'creation_id': creation_id, 'access_token': token},
                 timeout=30
             )
-            publish_resp.raise_for_status()
+            check_status(publish_resp, 'Instagram publish')
             post_id = publish_resp.json().get('id')
             if not post_id:
                 raise CheckFailure('Instagram did not return a confirmed post ID.')
