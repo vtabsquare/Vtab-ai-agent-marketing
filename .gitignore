@@ -1,0 +1,50 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Credentials & Secrets
+.env
+.env.*
+!.env.example
+*.key
+secret.key
+
+# SQLite Database & Local Data
+data/*
+!data/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+marketing.db
+
+# Logs & Temporary Files
+*.log
+logs/
+temp/
+tmp/
+scratch/
+
+# OS & Editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace
+
+# Node / Frontend (keep prebuilt frontend/dist for zero-build deployment)
+frontend/node_modules/
+frontend/.npm/
+!frontend/dist/

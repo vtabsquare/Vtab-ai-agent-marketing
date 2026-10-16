@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "agents": {
+    "manager": {"implementation": "manager_v1", "profile": "default", "prompt_version": "manager.v2", "tools": ["memory.search"], "memory_read": ["client", "campaign", "agent.manager"], "memory_write": ["campaign"]},
+    "research": {"implementation": "research_v1", "profile": "default", "prompt_version": "research.v2", "tools": ["web.search", "website.knowledge", "memory.search"], "memory_read": ["client", "campaign", "agent.research"], "memory_write": ["campaign", "agent.research.candidate"]},
+    "strategy": {"implementation": "strategy_v1", "profile": "default", "prompt_version": "strategy.v2", "tools": ["memory.search", "crm.read_segments"], "memory_read": ["client", "campaign", "performance", "agent.strategy"], "memory_write": ["campaign"]},
+    "writing": {"implementation": "writing_v1", "profile": "default", "prompt_version": "writing.v2", "tools": ["memory.search"], "memory_read": ["client", "campaign", "agent.writing"], "memory_write": ["campaign", "agent.writing.candidate"]},
+    "creative": {"implementation": "creative_v1", "profile": "default", "prompt_version": "creative.v2", "tools": ["memory.search", "image.generate"], "memory_read": ["client", "campaign", "agent.creative"], "memory_write": ["campaign", "agent.creative.candidate"]},
+    "brand_review": {"implementation": "brand_review_v1", "profile": "default", "prompt_version": "brand-review.v2", "tools": ["memory.search"], "memory_read": ["client", "campaign", "agent.brand_review"], "memory_write": ["campaign"]},
+    "analytics": {"implementation": "analytics_v1", "profile": "default", "prompt_version": "analytics.v2", "tools": ["metrics.read", "memory.search"], "memory_read": ["campaign", "performance"], "memory_write": ["campaign", "performance.candidate"]},
+    "optimization": {"implementation": "optimization_v1", "profile": "default", "prompt_version": "optimization.v2", "tools": ["experiments.read", "memory.search"], "memory_read": ["client", "campaign", "performance", "agent.optimization"], "memory_write": ["campaign", "performance.candidate"]},
+    "engagement": {"implementation": "engagement_v1", "profile": "default", "prompt_version": "engagement.v2", "tools": ["memory.search"], "memory_read": ["client", "campaign", "agent.engagement"], "memory_write": ["campaign", "agent.engagement.candidate"]}
+  },
+  "profiles": {},
+  "limits": {"max_retries": 2, "max_revisions": 2, "max_model_calls": 60, "timeout_seconds": 60}
+}

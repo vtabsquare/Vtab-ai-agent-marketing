@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "default": "campaign.v1",
+  "workflows": {
+    "campaign.v1": {
+      "name": "Complete campaign",
+      "description": "Existing research-to-optimization workflow with controlled publishing and engagement.",
+      "roles": ["research", "strategy", "writing", "creative", "brand_review", "manager", "publishing", "analytics", "optimization", "engagement"],
+      "dependencies": {
+        "research": [], "strategy": ["research"], "writing": ["strategy"], "creative": ["strategy"],
+        "brand_review": ["writing", "creative"], "manager": ["brand_review"], "publishing": ["manager"],
+        "analytics": ["publishing"], "optimization": ["analytics"], "engagement": ["publishing"]
+      },
+      "required_capabilities": ["campaigns.create", "content.generate"]
+    },
+    "website-growth.v1": {
+      "name": "Website growth campaign",
+      "description": "Uses approved website knowledge to prepare a multi-channel campaign and lead-generation plan.",
+      "roles": ["research", "strategy", "writing", "creative", "brand_review", "manager", "publishing", "analytics", "optimization", "engagement"],
+      "dependencies": {
+        "research": [], "strategy": ["research"], "writing": ["strategy"], "creative": ["strategy"],
+        "brand_review": ["writing", "creative"], "manager": ["brand_review"], "publishing": ["manager"],
+        "analytics": ["publishing"], "optimization": ["analytics"], "engagement": ["publishing"]
+      },
+      "required_capabilities": ["website.ingest", "content.generate"]
+    }
+  }
+}

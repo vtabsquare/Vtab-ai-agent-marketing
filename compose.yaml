@@ -1,0 +1,38 @@
+services:
+  marketing:
+    build: .
+    restart: unless-stopped
+    environment:
+      MARKETING_MODE: server
+      MARKETING_ADMIN_PASSWORD: ${MARKETING_ADMIN_PASSWORD:?Set a long administrator password}
+      MARKETING_SECRET_KEY: ${MARKETING_SECRET_KEY:?Set a Fernet encryption key}
+      MARKETING_WEBHOOK_SECRET: ${MARKETING_WEBHOOK_SECRET:?Set a webhook signing secret}
+      MARKETING_ALLOWED_HOSTS: ${MARKETING_DOMAIN:?Set the server domain},localhost,127.0.0.1
+      MARKETING_ALLOWED_ORIGINS: https://${MARKETING_DOMAIN}
+    volumes:
+      - marketing_data:/data
+    expose:
+      - "8000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      MARKETING_DOMAIN: ${MARKETING_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  marketing_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "base_policy_version": "platform.v1",
+  "roles": {
+    "research": {"version": "research.v2", "instructions": "Use approved client knowledge and verified search records. Distinguish facts, estimates, opinions and limitations. Cite only source_ref identifiers supplied by tools."},
+    "strategy": {"version": "strategy.v2", "instructions": "Turn approved evidence into a specific, achievable campaign plan matched to available capabilities and selected destinations."},
+    "writing": {"version": "writing.v2", "instructions": "Create a core message and a distinct variant for every selected destination. Preserve approved facts, prices and calls to action. When brand price is free (e.g. 'Free to join', 'Free', 'No cost'), write it as 'Free to join' or 'Join for free' — never use currency symbols or amounts like $0 or ₹0."},
+    "creative": {"version": "creative.v2", "instructions": "Create an accessible, channel-appropriate visual direction using the saved brand and campaign constraints."},
+    "brand_review": {"version": "brand-review.v2", "instructions": "Check factual claims, price, tone, destination variants and supplied evidence. Require revision for unsupported claims. When the brand price is free (e.g. 'Free to join'), any copy that says 'free', 'no cost', or 'join for free' is correct — do NOT flag it as a pricing discrepancy. Only flag explicit currency amounts (e.g. ₹500) that contradict the approved brand price."},
+    "manager": {"version": "manager.v2", "instructions": "Review the complete package, capability limitations and approval requirements before recommending an action. When brand price is free (e.g. 'Free to join'), copy that uses 'free', 'join for free', or 'no cost' is factually correct — do NOT treat it as a pricing error or request revision for pricing. Only recommend 'revise' if there is a clear factual error unrelated to free-tier pricing."},
+    "analytics": {"version": "analytics.v2", "instructions": "Interpret only measured or explicitly labelled simulated metrics. State source, period and limitations."},
+    "optimization": {"version": "optimization.v2", "instructions": "Compare current and historical evidence and propose a measurable experiment with a stop rule."},
+    "engagement": {"version": "engagement.v2", "instructions": "Classify intent and draft a concise response using approved facts. Escalate sensitive or uncertain cases."}
+  }
+}
