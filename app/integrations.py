@@ -78,16 +78,31 @@ class Channel:
             self._validate_discord_webhook(webhook)
             payload = {'content': text, 'allowed_mentions': {'parse': []}}
             files = None
+            file_data = None
             if image_b64 and image_b64.startswith('data:image/png;base64,'):
                 import base64
                 file_data = base64.b64decode(image_b64.split(',', 1)[1])
                 files = {'file': ('creative.png', file_data, 'image/png')}
-            
+
+            discord_headers = {'User-Agent': 'DiscordBot (https://vtabsquare.com, 1.0.0)'}
             if files:
-                response = httpx.post(webhook, params={'wait':'true'}, data={'payload_json': __import__('json').dumps(payload)}, files=files, timeout=30)
+                response = httpx.post(webhook, headers=discord_headers, params={'wait':'true'}, data={'payload_json': __import__('json').dumps(payload)}, files=files, timeout=30)
             else:
-                response = httpx.post(webhook, params={'wait':'true'}, json=payload, timeout=30)
-            
+                response = httpx.post(webhook, headers=discord_headers, params={'wait':'true'}, json=payload, timeout=30)
+
+            if response.status_code == 429:
+                try:
+                    retry_after = float(response.json().get('retry_after', 2.0))
+                    import time
+                    time.sleep(min(retry_after, 5.0))
+                    if file_data:
+                        retry_files = {'file': ('creative.png', file_data, 'image/png')}
+                        response = httpx.post(webhook, headers=discord_headers, params={'wait':'true'}, data={'payload_json': __import__('json').dumps(payload)}, files=retry_files, timeout=30)
+                    else:
+                        response = httpx.post(webhook, headers=discord_headers, params={'wait':'true'}, json=payload, timeout=30)
+                except Exception:
+                    pass
+
             check_status(response, 'Discord')
             response_payload = response.json()
             post_id = response_payload.get('id')
