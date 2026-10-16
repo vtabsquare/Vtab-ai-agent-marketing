@@ -127,11 +127,37 @@ def create_app(data_dir=None, start_worker=True):
             return JSONResponse({'detail':'Your workspace role does not allow this view.'},status_code=403)
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             origin = request.headers.get("origin")
-            allowed = {f"http://127.0.0.1:{os.environ.get('MARKETING_PORT', '8000')}",
-                       f"http://localhost:{os.environ.get('MARKETING_PORT', '8000')}"}
-            allowed.update(filter(None,os.environ.get('MARKETING_ALLOWED_ORIGINS','').split(',')))
-            if origin and origin not in allowed:
-                return JSONResponse({"detail": "This workspace only accepts actions from its configured browser origin."}, status_code=403)
+            if origin:
+                origin_clean = origin.rstrip("/")
+                host = request.headers.get("host", "")
+                current_host = host.split(":")[0].lower() if host else ""
+                origin_host = origin_clean.split("://")[-1].split(":")[0].lower() if "://" in origin_clean else origin_clean.lower()
+
+                port = os.environ.get('PORT', os.environ.get('MARKETING_PORT', '8000'))
+                allowed = {
+                    f"http://127.0.0.1:{port}",
+                    f"http://localhost:{port}",
+                    "http://127.0.0.1:8000",
+                    "http://localhost:8000",
+                    "http://127.0.0.1:5173",
+                    "http://localhost:5173",
+                }
+                if host:
+                    allowed.add(f"http://{host}")
+                    allowed.add(f"https://{host}")
+                render_url = os.environ.get("RENDER_EXTERNAL_URL")
+                if render_url:
+                    allowed.add(render_url.rstrip("/"))
+                allowed.update(filter(None, os.environ.get('MARKETING_ALLOWED_ORIGINS', '').split(',')))
+
+                is_allowed = (
+                    origin_clean in allowed
+                    or (current_host and origin_host == current_host)
+                    or origin_host.endswith(".onrender.com")
+                    or origin_host.endswith(".render.com")
+                )
+                if not is_allowed:
+                    return JSONResponse({"detail": "This workspace only accepts actions from its configured browser origin."}, status_code=403)
         try:
             response = await call_next(request)
         except Exception:
