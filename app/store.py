@@ -18,6 +18,20 @@ DEFAULT_SETTINGS = {'provider': 'demo', 'model': 'deterministic-demo-v1', 'teste
  'brand': {'name':'Northstar Studio','product':'Brand launch package','price':'INR 2,499',
            'tone':'Clear, friendly and practical','facts':'Includes a brand consultation and three social post designs.'}}
 
+ENV_KEYS_MAP = {
+    'discord_webhook': 'DISCORD_WEBHOOK',
+    'facebook_page_id': 'FACEBOOK_PAGE_ID',
+    'facebook_page_token': 'FACEBOOK_PAGE_TOKEN',
+    'facebook_verify_token': 'FACEBOOK_VERIFY_TOKEN',
+    'instagram_account_id': 'INSTAGRAM_ACCOUNT_ID',
+    'instagram_access_token': 'INSTAGRAM_ACCESS_TOKEN',
+    'instagram_verify_token': 'INSTAGRAM_VERIFY_TOKEN',
+    'whatsapp_phone_number_id': 'WHATSAPP_PHONE_NUMBER_ID',
+    'whatsapp_token': 'WHATSAPP_TOKEN',
+    'whatsapp_recipient': 'WHATSAPP_RECIPIENT',
+    'hf_token': 'HF_TOKEN',
+}
+
 
 class Store:
     def __init__(self, folder):
@@ -119,12 +133,22 @@ class Store:
         with self.reading() as db:
             settings=normalize_settings(json.loads(db.execute('SELECT payload FROM settings WHERE id=1').fetchone()[0]))
             settings['social_keys']={k:self.vault.decode(v) for k,v in settings.get('social_keys',{}).items()}
+            for k, env_name in ENV_KEYS_MAP.items():
+                if not settings['social_keys'].get(k) and os.environ.get(env_name):
+                    settings['social_keys'][k] = os.environ[env_name]
+            gemini_key = self.key()
+            if gemini_key and settings.get('provider') == 'demo' and os.environ.get('GEMINI_API_KEY'):
+                settings['provider'] = 'gemini'
+                settings['model'] = os.environ.get('GEMINI_MODEL', 'gemini-3.5-flash-lite')
+                from .controller import fingerprint
+                settings['tested_fingerprint'] = fingerprint(settings, gemini_key)
             return settings
 
     def key(self):
         with self.reading() as db:
             row=db.execute('SELECT api_key FROM secrets WHERE id=1').fetchone()
-            return self.vault.decode(row[0]) if row else ''
+            stored = self.vault.decode(row[0]) if row else ''
+            return stored or os.environ.get("GEMINI_API_KEY", "")
 
     def set_settings(self,settings,key=None):
         settings=normalize_settings(json.loads(json.dumps(settings)))
