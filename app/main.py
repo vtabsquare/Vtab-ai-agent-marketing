@@ -66,13 +66,13 @@ def create_app(data_dir=None, start_worker=True):
             except Exception:
                 # No raw exception/request text in logs: it could contain provider credentials.
                 active = False
-            stop.wait(0.3 if active else 0.8)
+            stop.wait(0.5 if active else 1.5)
 
     @asynccontextmanager
     async def lifespan(app):
         threads = []
         if start_worker:
-            for index in range(4):
+            for index in range(1):
                 thread = threading.Thread(target=worker, name=f"bot-worker-{index+1}", daemon=True)
                 thread.start()
                 threads.append(thread)

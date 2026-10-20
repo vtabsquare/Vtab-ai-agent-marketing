@@ -211,7 +211,7 @@ class Community:
                 payload = json.loads(row[0])
                 existing_events.add(str(payload.get('event_id', '')))
 
-        for c in self.store.list():
+        for c in self.store.list()[:3]:
             receipts = c.get('results', {}).get('publishing', {}).get('output', {}).get('receipts', [])
             for r in receipts:
                 platform = r.get('platform')
@@ -321,9 +321,9 @@ class Community:
         return queued
 
     def step(self):
-        # Auto-poll social comments every 20 seconds
+        # Auto-poll social comments every 45 seconds
         now = time.time()
-        if getattr(self, '_last_sync', 0) + 20 < now:
+        if getattr(self, '_last_sync', 0) + 45 < now:
             self._last_sync = now
             try:
                 self.sync_social_comments()

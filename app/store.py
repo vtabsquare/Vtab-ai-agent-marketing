@@ -257,8 +257,8 @@ class Store:
         self._db_url = _build_database_url()
         self._use_pg = bool(self._db_url and _PSYCOPG2_AVAILABLE)
 
-        self.pool = queue.LifoQueue(maxsize=8)
-        self.pool_slots = threading.BoundedSemaphore(8)
+        self.pool = queue.LifoQueue(maxsize=3)
+        self.pool_slots = threading.BoundedSemaphore(3)
         from .credentials import Vault
         self.vault = Vault(self.folder)
 
