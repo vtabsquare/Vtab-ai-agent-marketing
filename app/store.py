@@ -397,9 +397,10 @@ class Store:
                 if not settings['social_keys'].get(k) and os.environ.get(env_name):
                     settings['social_keys'][k] = os.environ[env_name]
             gemini_key = self.key()
-            if gemini_key and settings.get('provider') == 'demo' and os.environ.get('GEMINI_API_KEY'):
-                settings['provider'] = 'gemini'
-                settings['model'] = os.environ.get('GEMINI_MODEL', 'gemini-3.5-flash-lite')
+            if gemini_key and os.environ.get('GEMINI_API_KEY'):
+                if settings.get('provider') == 'demo':
+                    settings['provider'] = 'gemini'
+                    settings['model'] = os.environ.get('GEMINI_MODEL', 'gemini-3.5-flash-lite')
                 from .controller import fingerprint
                 settings['tested_fingerprint'] = fingerprint(settings, gemini_key)
             return settings

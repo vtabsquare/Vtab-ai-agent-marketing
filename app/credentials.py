@@ -20,4 +20,11 @@ class Vault:
         return 'encrypted:'+self.cipher.encrypt(value.encode()).decode() if value else ''
 
     def decode(self, value):
-        return self.cipher.decrypt(value[10:].encode()).decode() if value.startswith('encrypted:') else value
+        if not value or not isinstance(value, str):
+            return ''
+        if value.startswith('encrypted:'):
+            try:
+                return self.cipher.decrypt(value[10:].encode()).decode()
+            except Exception:
+                return ''
+        return value
