@@ -518,7 +518,7 @@ def collect_metrics(campaign, settings):
     measured=[r for r in records if r.get('available')]
     total_engagements = sum(r.get('engagements', 0) for r in measured if r.get('engagements') is not None) if any(r.get('engagements') is not None for r in measured) else None
     total_impressions = sum(r.get('impressions', 0) for r in measured if r.get('impressions') is not None) if any(r.get('impressions') is not None for r in measured) else None
-    overall_rate = round(total_engagements / total_impressions * 100, 2) if total_impressions else None
+    overall_rate = round(total_engagements / total_impressions * 100, 2) if (total_impressions and total_engagements is not None) else None
     return {'mode':'live','records':records,
             'impressions':total_impressions,
             'engagements':total_engagements,

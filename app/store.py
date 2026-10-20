@@ -257,8 +257,8 @@ class Store:
         self._db_url = _build_database_url()
         self._use_pg = bool(self._db_url and _PSYCOPG2_AVAILABLE)
 
-        self.pool = queue.LifoQueue(maxsize=3)
-        self.pool_slots = threading.BoundedSemaphore(3)
+        self.pool = queue.LifoQueue(maxsize=6)
+        self.pool_slots = threading.BoundedSemaphore(6)
         from .credentials import Vault
         self.vault = Vault(self.folder)
 
@@ -289,6 +289,12 @@ class Store:
         try:
             try:
                 db = self.pool.get_nowait()
+                if self._use_pg and db._conn.closed != 0:
+                    try:
+                        db.close()
+                    except Exception:
+                        pass
+                    db = self.connect()
             except queue.Empty:
                 db = self.connect()
             yield db

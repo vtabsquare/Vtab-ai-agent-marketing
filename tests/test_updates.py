@@ -49,7 +49,7 @@ def test_concurrent_writers_and_readers(tmp_path):
 
 def test_live_schedule_survives_restart_and_uses_real_metrics(tmp_path,monkeypatch):
     store=Store(tmp_path); settings=store.settings(); settings.update(publishing_mode='live',platforms=['twitter']); store.set_settings(settings)
-    monkeypatch.setattr(Channel,'publish',lambda self,text:{'platform':'twitter','post_id':'123','status':'published'})
+    monkeypatch.setattr(Channel,'publish',lambda self,text,*args,**kwargs:{'platform':'twitter','post_id':'123','status':'published'})
     monkeypatch.setattr(Channel,'metrics',lambda self,post_id:{'available':True,'impressions':500,'engagement_rate_pct':8,'platform':'twitter'})
     controller=Controller(store,AgentRegistry(ROOT)); c=draft(store,controller)
     controller.approve(c['id'],{'content_hash':c['content_hash'],'note':''}); controller.step()
@@ -64,7 +64,7 @@ def test_live_schedule_survives_restart_and_uses_real_metrics(tmp_path,monkeypat
 def test_publication_ledger_prevents_duplicate_and_unknown_retry(tmp_path,monkeypatch):
     store=Store(tmp_path); s=store.settings(); s.update(publishing_mode='live',platforms=['discord']); store.set_settings(s)
     c=draft(store,Controller(store,AgentRegistry(ROOT))); calls=[]
-    monkeypatch.setattr(Channel,'publish',lambda self,text:calls.append(text) or {'platform':'discord','post_id':'1','status':'published'})
+    monkeypatch.setattr(Channel,'publish',lambda self,text,*args,**kwargs:calls.append(text) or {'platform':'discord','post_id':'1','status':'published'})
     publisher=PublisherBot(store)
     first=publisher.publish(c,c['content_hash']); assert publisher.publish(c,c['content_hash'])==first; assert len(calls)==1
     with store.transaction() as db: db.execute("UPDATE publications SET status='submitting'")

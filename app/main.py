@@ -21,7 +21,7 @@ from .contracts import Brief, SettingsInput, Decision, Revision, Strategy, Input
 from .controller import Controller, STAGES, fingerprint
 from .providers import build_provider, get_key, ModelRequest, ProviderError
 from .store import Store, Conflict, Missing
-from .tools import brand_card
+from .tools import brand_card, CheckFailure
 from .capabilities import effective_capabilities, normalize_settings
 from .website import WebsiteIntelligence
 from .standalone import StandaloneWorkspace
@@ -181,7 +181,7 @@ def create_app(data_dir=None, start_worker=True):
             raise HTTPException(404, str(exc)) from None
         except Conflict as exc:
             raise HTTPException(409, str(exc)) from None
-        except ProviderError as exc:
+        except (ProviderError, CheckFailure, ValueError) as exc:
             raise HTTPException(400, str(exc)) from None
 
     def public_settings():
@@ -272,7 +272,7 @@ def create_app(data_dir=None, start_worker=True):
 
     @app.post('/api/website/scan')
     def scan_website(data: WebsiteScanRequest):
-        return perform(lambda:website.scan(data.url,data.max_pages))
+        return perform(lambda: website.scan(data.url, min(data.max_pages or 5, 8)))
 
     @app.get('/api/knowledge')
     def knowledge(status: str | None=None):

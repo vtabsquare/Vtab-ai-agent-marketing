@@ -35,3 +35,19 @@ def test_prompt_injection_is_flagged_and_low_confidence(tmp_path,monkeypatch):
         result=client.post('/api/website/scan',json={'url':'https://example.com'}).json()
         assert result['pages'][0]['suspicious'] is True
         assert client.get('/api/knowledge').json()[0]['confidence']==0.2
+
+def test_same_site_apex_to_www_redirect_is_followed(tmp_path,monkeypatch):
+    html='<html><head><title>VTAB Square</title><meta name="description" content="AI Software"></head><body><h1>Welcome</h1></body></html>'
+    def get(url,**kwargs):
+        if url=='https://vtabsquare.com':
+            return httpx.Response(301,headers={'location':'https://www.vtabsquare.com/'},request=httpx.Request('GET',url))
+        if url.endswith('/sitemap.xml'):
+            return httpx.Response(404,request=httpx.Request('GET',url))
+        return httpx.Response(200,text=html,headers={'content-type':'text/html'},request=httpx.Request('GET',url))
+    monkeypatch.setattr(httpx,'get',get)
+    with TestClient(create_app(tmp_path,start_worker=False)) as client:
+        result=client.post('/api/website/scan',json={'url':'vtabsquare.com','max_pages':2})
+        assert result.status_code==200
+        assert len(result.json()['pages'])>=1
+        assert result.json()['pages'][0]['title']=='VTAB Square'
+
