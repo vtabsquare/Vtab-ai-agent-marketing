@@ -8,10 +8,10 @@ class Contract(BaseModel):
 
 class Brand(Contract):
     name: str = Field(min_length=1, max_length=120)
-    product: str = Field(min_length=1, max_length=160)
-    price: str = Field(min_length=1, max_length=60)
-    tone: str = Field(min_length=1, max_length=160)
-    facts: str = Field(default="", max_length=2500)
+    product: str = Field(min_length=1, max_length=300)
+    price: str = Field(min_length=1, max_length=200)
+    tone: str = Field(min_length=1, max_length=200)
+    facts: str = Field(default="", max_length=4000)
 
 class ChannelSetting(Contract):
     mode: Literal['disabled','content_only','publishing_connected','fully_connected'] = 'disabled'
@@ -245,16 +245,16 @@ class Strategy(AgentOutput):
 
 class ChannelVariant(Contract):
     channel: str = Field(min_length=1,max_length=80)
-    headline: str = Field(min_length=1,max_length=180)
+    headline: str = Field(default='',max_length=250)
     body: str = Field(min_length=1,max_length=4000)
     call_to_action: str = Field(default='',max_length=300)
 
 class Writing(AgentOutput):
-    headline: str = Field(min_length=1, max_length=180)
-    caption: str = Field(min_length=1, max_length=2500)
-    product_claim: str = Field(min_length=1, max_length=160)
-    price_claim: str = Field(min_length=1, max_length=60)
-    call_to_action: str = Field(min_length=1, max_length=200)
+    headline: str = Field(min_length=1, max_length=250)
+    caption: str = Field(min_length=1, max_length=3500)
+    product_claim: str = Field(min_length=1, max_length=300)
+    price_claim: str = Field(min_length=1, max_length=200)
+    call_to_action: str = Field(min_length=1, max_length=300)
     variants: list[ChannelVariant] = Field(default_factory=list,max_length=20)
 
 

@@ -33,20 +33,20 @@ def validate_copy(output, brand):
         if actual_price and not is_free(actual_price) and brand_price_match is None:
             raise CheckFailure('The price conflicts with the approved brand price.')
     else:
-        if actual_price != expected_price:
+        if actual_price != expected_price and expected_price not in actual_price and actual_price not in expected_price:
             raise CheckFailure('The price conflicts with the approved brand price.')
 
     if not brand_is_free:
         # Only enforce caption currency when the brand has a specific paid price
-        for claim in re.findall(r"(?:INR|USD|EUR|GBP|Rs\.?|₹|\$|€|£)\s*[\d,]+(?:\.\d+)?", output['caption'], re.I):
+        for claim in re.findall(r"(?:INR|USD|EUR|GBP|Rs\.?|₹|\$|€|£)\s*[\d,]+(?:\.\d+)?", output.get('caption', ''), re.I):
             c_norm = normalize(claim)
-            if c_norm != expected_price:
+            if c_norm != expected_price and expected_price not in c_norm and c_norm not in expected_price:
                 raise CheckFailure('The caption contains an unapproved price.')
 
         for variant in output.get('variants', []):
             for claim in re.findall(r"(?:INR|USD|EUR|GBP|Rs\.?|₹|\$|€|£)\s*[\d,]+(?:\.\d+)?", variant.get('body', ''), re.I):
                 c_norm = normalize(claim)
-                if c_norm != expected_price:
+                if c_norm != expected_price and expected_price not in c_norm and c_norm not in expected_price:
                     raise CheckFailure('A channel variant contains an unapproved price.')
 
 

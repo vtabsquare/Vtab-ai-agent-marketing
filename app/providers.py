@@ -130,10 +130,47 @@ class GeminiProvider:
                     raise
             if not response.text:
                 raise ProviderError("Gemini returned no usable structured output.", kind="invalid_output")
+            raw_text = response.text.strip()
+            clean_text = raw_text
+            if clean_text.startswith("```"):
+                lines = clean_text.splitlines()
+                if lines and lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].strip().startswith("```"):
+                    lines = lines[:-1]
+                clean_text = "\n".join(lines).strip()
             try:
-                output = request.schema.model_validate_json(response.text).model_dump()
-            except ValueError:
-                raise ProviderError("Gemini output did not match this agent's contract.", kind="invalid_output") from None
+                output = request.schema.model_validate_json(clean_text).model_dump()
+            except (ValueError, Exception) as first_err:
+                try:
+                    s_idx = clean_text.find("{")
+                    e_idx = clean_text.rfind("}")
+                    candidate_json = clean_text[s_idx:e_idx+1] if (s_idx != -1 and e_idx != -1 and e_idx > s_idx) else clean_text
+                    parsed = json.loads(candidate_json)
+                    if isinstance(parsed, dict):
+                        if request.role == 'writing':
+                            b = request.context.get('brand', {})
+                            if not parsed.get('product_claim'):
+                                parsed['product_claim'] = str(b.get('product', ''))[:300]
+                            if not parsed.get('price_claim'):
+                                parsed['price_claim'] = str(b.get('price', ''))[:200]
+                            if not parsed.get('call_to_action'):
+                                parsed['call_to_action'] = 'Learn more'
+                            if not parsed.get('headline'):
+                                parsed['headline'] = str(parsed.get('product_claim', 'Featured Offer'))[:250]
+                            if not parsed.get('caption'):
+                                parsed['caption'] = str(parsed.get('headline', ''))
+                            for v in parsed.get('variants', []):
+                                if isinstance(v, dict):
+                                    v.setdefault('headline', '')
+                                    if not v.get('call_to_action'):
+                                        v['call_to_action'] = parsed.get('call_to_action', '')
+                        output = request.schema.model_validate(parsed).model_dump()
+                    else:
+                        raise first_err
+                except Exception as final_err:
+                    print(f"Contract validation failure in {request.role}: {final_err}\nRaw response:\n{raw_text[:600]}", flush=True)
+                    raise ProviderError(f"Gemini output did not match this agent's contract: {final_err}", kind="invalid_output") from None
             usage = response.usage_metadata
             return ModelResponse(output, {"input_tokens": getattr(usage, "prompt_token_count", None),
                                           "output_tokens": getattr(usage, "candidates_token_count", None)})

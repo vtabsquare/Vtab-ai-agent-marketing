@@ -83,3 +83,50 @@ def test_validation_does_not_echo_key(tmp_path):
         response = client.put('/api/settings',json={"api_key":"secret-do-not-echo"*30})
         assert response.status_code == 422
         assert "secret-do-not-echo" not in response.text
+
+
+def test_writing_contract_accepts_rich_offer_prices_and_empty_variant_headlines():
+    from app.contracts import Writing
+    payload = {
+        "headline": "Grand Opening SS Hyderabad Biryani Tiruvallur",
+        "caption": "Enjoy authentic Hyderabadi biryani with our Buy 2 Get 1 FREE Grand Opening offer at ₹99!",
+        "product_claim": "Authentic Hyderabadi Chicken Biryani, Mutton Biryani, and Bucket Biryani in Chennai and Tamil Nadu",
+        "price_claim": "Smile Pack from ₹99. Grand Opening offer: Buy 2 Chicken Biryani, Get 1 FREE",
+        "call_to_action": "Order via WhatsApp at +91 76007 44444",
+        "variants": [
+            {"channel": "whatsapp", "body": "Order your favourite biryani now! Buy 2 Get 1 FREE."},
+            {"channel": "instagram", "headline": "", "body": "Tiruvallur branch is now OPEN! Taste the love of sharing."}
+        ]
+    }
+    validated = Writing.model_validate(payload)
+    assert validated.price_claim.startswith("Smile Pack")
+    assert validated.variants[0].headline == ""
+
+
+def test_gemini_provider_handles_markdown_and_heals_missing_fields(monkeypatch):
+    import types
+    from google import genai
+    from app.contracts import Writing
+
+    markdown_response = '```json\n{"headline": "SS Biryani Feast", "caption": "Delicious food at ₹99", "variants": [{"channel": "whatsapp", "body": "Text us!"}]}\n```'
+
+    class Client:
+        def __init__(self, **kw):
+            self.models = types.SimpleNamespace(
+                generate_content=lambda **kw: types.SimpleNamespace(
+                    text=markdown_response,
+                    usage_metadata=types.SimpleNamespace(prompt_token_count=10, candidates_token_count=20)
+                )
+            )
+        def close(self): pass
+
+    monkeypatch.setattr(genai, "Client", Client)
+    provider = GeminiProvider("gemini-test", "test-key")
+    ctx = {"brand": {"product": "Bucket Biryani", "price": "₹99"}}
+    res = provider.generate(ModelRequest("writing", ctx, Writing, "writing.v2"))
+    assert res.output["headline"] == "SS Biryani Feast"
+    assert res.output["product_claim"] == "Bucket Biryani"
+    assert res.output["price_claim"] == "₹99"
+    assert res.output["variants"][0]["channel"] == "whatsapp"
+
+
