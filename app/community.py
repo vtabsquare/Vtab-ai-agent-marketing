@@ -248,8 +248,8 @@ class Community:
                     except Exception:
                         pass
 
-                # 2. Facebook comments
-                elif platform == 'facebook' and fb_token:
+                # 2. Facebook comments — independent check (NOT elif, so campaigns with both IG+FB receipts poll both)
+                if platform == 'facebook' and fb_token:
                     try:
                         resp = httpx.get(
                             f'https://graph.facebook.com/v21.0/{post_id}/comments?fields=id,message,from,created_time&access_token={fb_token}',
@@ -276,6 +276,47 @@ class Community:
                                         pass
                     except Exception:
                         pass
+
+                # 3. WhatsApp — poll inbound messages received by the business number
+                if platform == 'whatsapp':
+                    wa_token = keys.get('whatsapp_token') or keys.get('facebook_page_token', '')
+                    phone_number_id = keys.get('whatsapp_phone_number_id', '')
+                    if wa_token and phone_number_id:
+                        try:
+                            import json as _json
+                            filter_param = _json.dumps([{"field": "status", "operator": "EQUAL", "value": "received"}])
+                            resp = httpx.get(
+                                f'https://graph.facebook.com/v21.0/{phone_number_id}/messages',
+                                params={'fields': 'id,from,text,timestamp,type', 'filtering': filter_param, 'access_token': wa_token},
+                                timeout=15
+                            )
+                            if resp.status_code == 200:
+                                for msg in resp.json().get('data', []):
+                                    mid = str(msg.get('id', ''))
+                                    if not mid or mid in existing_events:
+                                        continue
+                                    if msg.get('type', '') != 'text':
+                                        continue
+                                    text = (msg.get('text') or {}).get('body', '').strip()
+                                    from_num = str(msg.get('from', ''))
+                                    author = f'+{from_num}' if from_num else 'WhatsApp User'
+                                    if not text:
+                                        continue
+                                    try:
+                                        self.receive({
+                                            'event_id': mid,
+                                            'campaign_id': c['id'],
+                                            'platform': 'whatsapp',
+                                            'post_id': from_num or post_id,
+                                            'author': author,
+                                            'text': text
+                                        })
+                                        existing_events.add(mid)
+                                        queued += 1
+                                    except Exception:
+                                        pass
+                        except Exception:
+                            pass
 
         return queued
 
