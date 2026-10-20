@@ -427,6 +427,54 @@ class Channel:
                         'engagements': None, 'engagement_rate_pct': None,
                         'limitations': f'Instagram metrics query failed: {str(e)[:150]}'}
 
+        if self.platform == 'facebook':
+            token = self.keys.get('facebook_page_token', '')
+            if not token:
+                return {'platform': 'facebook', 'post_id': str(post_id), 'available': False, 'impressions': None,
+                        'engagements': None, 'engagement_rate_pct': None,
+                        'limitations': 'Save a Facebook Page token to collect metrics.'}
+            try:
+                resp = httpx.get(
+                    f'https://graph.facebook.com/v21.0/{post_id}?fields=reactions.summary(total_count),comments.summary(total_count),shares&access_token={token}',
+                    timeout=15
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    reactions = data.get('reactions', {}).get('summary', {}).get('total_count', 0)
+                    comments = data.get('comments', {}).get('summary', {}).get('total_count', 0)
+                    shares = data.get('shares', {}).get('count', 0) if isinstance(data.get('shares'), dict) else 0
+                    engagements = reactions + comments + shares
+
+                    impressions = None
+                    try:
+                        ins_resp = httpx.get(
+                            f'https://graph.facebook.com/v21.0/{post_id}/insights?metric=post_impressions&access_token={token}',
+                            timeout=15
+                        )
+                        if ins_resp.status_code == 200:
+                            for m in ins_resp.json().get('data', []):
+                                if m.get('name') == 'post_impressions':
+                                    values = m.get('values', [{}])
+                                    impressions = values[0].get('value') if values else None
+                    except Exception:
+                        pass
+
+                    rate = round(engagements / impressions * 100, 2) if impressions else None
+                    return {
+                        'platform': 'facebook', 'post_id': str(post_id), 'available': True,
+                        'impressions': impressions, 'engagements': engagements,
+                        'engagement_rate_pct': rate,
+                        'limitations': 'Facebook reactions, comments and shares via Meta Graph API.'
+                    }
+                else:
+                    return {'platform': 'facebook', 'post_id': str(post_id), 'available': False, 'impressions': None,
+                            'engagements': None, 'engagement_rate_pct': None,
+                            'limitations': f'Facebook metrics returned status {resp.status_code}'}
+            except Exception as e:
+                return {'platform': 'facebook', 'post_id': str(post_id), 'available': False, 'impressions': None,
+                        'engagements': None, 'engagement_rate_pct': None,
+                        'limitations': f'Facebook metrics query failed: {str(e)[:150]}'}
+
         if self.platform != 'twitter':
             return {'platform':self.platform,'post_id':post_id,'available':False,'impressions':None,
                     'engagements':None,'engagement_rate_pct':None,
