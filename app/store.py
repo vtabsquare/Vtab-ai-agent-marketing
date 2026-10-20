@@ -59,8 +59,18 @@ class _PGCursor:
     # --- query helpers ---------------------------------------------------
     @staticmethod
     def _pg_sql(sql):
-        """Convert SQLite-style ? placeholders to PostgreSQL %s."""
-        return sql.replace('?', '%s')
+        """Convert SQLite-style SQL to PostgreSQL syntax."""
+        s = sql.replace('?', '%s')
+        if 'INSERT OR IGNORE INTO' in s.upper():
+            s = re.sub(r'INSERT\s+OR\s+IGNORE\s+INTO', 'INSERT INTO', s, flags=re.IGNORECASE)
+            s = s.rstrip('; \t\n') + ' ON CONFLICT DO NOTHING'
+        elif 'INSERT OR REPLACE INTO' in s.upper():
+            s = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO', 'INSERT INTO', s, flags=re.IGNORECASE)
+            m = re.search(r'INSERT\s+INTO\s+(\w+)', s, flags=re.IGNORECASE)
+            tbl = m.group(1).lower() if m else ''
+            pk = 'id' if tbl != 'connector_states' else 'connector_id'
+            s = s.rstrip('; \t\n') + f' ON CONFLICT ({pk}) DO NOTHING'
+        return s
 
     def execute(self, sql, params=()):
         if sql.strip().upper().startswith('PRAGMA'):

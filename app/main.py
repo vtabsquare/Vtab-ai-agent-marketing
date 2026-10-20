@@ -103,7 +103,7 @@ def create_app(data_dir=None, start_worker=True):
     @app.middleware("http")
     async def local_guard(request: Request, call_next):
         public_path=request.url.path.startswith('/forms/') or request.url.path.startswith('/public/forms/') or request.url.path=='/api/public/events'
-        auth_public=request.url.path in {'/api/health','/api/auth/login','/api/webhooks/engagement','/api/webhooks/x','/api/webhooks/facebook','/api/webhooks/instagram'}
+        auth_public=request.url.path in {'/api/health','/api/auth/login','/api/webhooks/engagement','/api/webhooks/x','/api/webhooks/facebook','/api/webhooks/instagram','/api/webhooks/whatsapp'}
         actor=None if server else {'id':'local-owner','email':'local-owner','name':'Local workspace owner','role':'owner','active':True}
         session_token=request.cookies.get('marketing_session','')
         if server and not auth_public and not public_path:
