@@ -10,7 +10,7 @@ from urllib.parse import urljoin, urlparse
 from xml.etree import ElementTree
 
 import httpx
-from .tools import CheckFailure
+from .tools import CheckFailure, memory_trim
 
 INJECTION_PATTERNS = (
     r'ignore\s+(all|previous)\s+instructions',
@@ -233,4 +233,4 @@ class WebsiteIntelligence:
         try:
             return self.store.save_website_scan(root_url, pages, candidate_items)
         finally:
-            gc.collect()
+            memory_trim()

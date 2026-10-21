@@ -21,7 +21,7 @@ from .contracts import Brief, SettingsInput, Decision, Revision, Strategy, Input
 from .controller import Controller, STAGES, fingerprint
 from .providers import build_provider, get_key, ModelRequest, ProviderError
 from .store import Store, Conflict, Missing
-from .tools import brand_card, CheckFailure
+from .tools import brand_card, CheckFailure, memory_trim
 from .capabilities import effective_capabilities, normalize_settings
 from .website import WebsiteIntelligence
 from .standalone import StandaloneWorkspace
@@ -59,6 +59,7 @@ def create_app(data_dir=None, start_worker=True):
     stop = threading.Event()
 
     def worker():
+        cycles = 0
         while not stop.is_set():
             try:
                 active = controller.step()
@@ -66,6 +67,9 @@ def create_app(data_dir=None, start_worker=True):
             except Exception:
                 # No raw exception/request text in logs: it could contain provider credentials.
                 active = False
+            cycles += 1
+            if cycles % 30 == 0:
+                memory_trim()
             stop.wait(0.5 if active else 1.5)
 
     @asynccontextmanager
@@ -634,7 +638,7 @@ def create_app(data_dir=None, start_worker=True):
 
     @app.get("/api/campaigns")
     def campaigns():
-        return store.list()
+        return store.list(include_images=False)
 
     @app.post("/api/campaigns", status_code=201)
     def create_campaign(brief: Brief):

@@ -211,7 +211,7 @@ class Community:
                 payload = json.loads(row[0])
                 existing_events.add(str(payload.get('event_id', '')))
 
-        for c in self.store.list()[:3]:
+        for c in self.store.recent(limit=3):
             receipts = c.get('results', {}).get('publishing', {}).get('output', {}).get('receipts', [])
             for r in receipts:
                 platform = r.get('platform')

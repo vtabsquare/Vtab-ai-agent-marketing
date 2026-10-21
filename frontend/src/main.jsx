@@ -15,7 +15,20 @@ function App(){
  const [form,setForm]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[answers,setAnswers]=useState({}),[revision,setRevision]=useState(''),[inbox,setInbox]=useState(false);
  const current=workflows.find(c=>c.id===selected),feedEnd=useRef(null),feedBox=useRef(null),follow=useRef(true);
  async function refresh(){const [s,cs,ns,es]=await Promise.all([api('/settings'),api('/campaigns'),api('/notifications'),api('/engagement')]);setCommunity(es);setSettings(s);setWorkflows(cs);setNotifications(ns);setConnected(true);}
- useEffect(()=>{refresh().catch(e=>{setError(e.message);setConnected(false);});const timer=setInterval(()=>refresh().catch(e=>{setConnected(false);setError(e.message);}),2000);return()=>clearInterval(timer);},[]);
+ useEffect(()=>{
+    refresh().catch(e=>{setError(e.message);setConnected(false);});
+    const timer=setInterval(()=>{
+      if(!document.hidden) refresh().catch(e=>{setConnected(false);setError(e.message);});
+    },3500);
+    const onVisible=()=>{
+      if(!document.hidden) refresh().catch(e=>{setConnected(false);setError(e.message);});
+    };
+    document.addEventListener('visibilitychange',onVisible);
+    return ()=>{
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange',onVisible);
+    };
+  },[]);
  useEffect(()=>{setError('');setNotice('');follow.current=true;},[page,selected]);
  useEffect(()=>{if(tab==='conversation'&&follow.current&&feedBox.current)feedBox.current.scrollTop=feedBox.current.scrollHeight;},[current?.events.length,tab,selected]);
  useEffect(()=>{

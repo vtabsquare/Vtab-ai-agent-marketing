@@ -14,3 +14,7 @@ services:
         value: ./data
       - key: MARKETING_ALLOWED_HOSTS
         value: "*"
+      - key: MALLOC_TRIM_THRESHOLD_
+        value: "65536"
+      - key: PYTHONUNBUFFERED
+        value: "1"

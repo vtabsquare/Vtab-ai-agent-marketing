@@ -1,7 +1,19 @@
+import gc
 import hashlib
 import html
 import json
 import re
+
+
+def memory_trim():
+    """Aggressively collect Python garbage and release freed heap pages back to the OS on Linux."""
+    gc.collect()
+    try:
+        import ctypes
+        libc = ctypes.CDLL('libc.so.6')
+        libc.malloc_trim(0)
+    except Exception:
+        pass
 
 
 class CheckFailure(ValueError):
@@ -152,7 +164,10 @@ def rasterize_brand_card(c, image_b64=None):
     out = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
     buf = io.BytesIO()
     out.save(buf, format='PNG')
-    return 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
+    res_b64 = 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
+    del img, overlay, out, buf
+    memory_trim()
+    return res_b64
 
 
 class PublisherBot:

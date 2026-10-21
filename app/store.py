@@ -511,10 +511,33 @@ class Store:
             if not row: raise Missing('Workflow not found.')
             return json.loads(row[0])
 
-    def list(self):
+    def list(self, include_images=False):
         with self.reading() as db:
             rows = db.execute('SELECT payload FROM campaigns').fetchall()
-        return sorted((json.loads(r[0]) for r in rows), key=lambda c: c['created_at'], reverse=True)
+        items = []
+        for r in rows:
+            c = json.loads(r[0])
+            if not include_images:
+                res = c.get('results')
+                if isinstance(res, dict):
+                    creative = res.get('creative')
+                    if isinstance(creative, dict) and 'image' in creative:
+                        # Omit bulky base64 image from the list view (cuts payload by ~85%)
+                        c['results']['creative'] = {k: v for k, v in creative.items() if k != 'image'}
+            items.append(c)
+        return sorted(items, key=lambda c: c['created_at'], reverse=True)
+
+    def recent(self, limit=3):
+        with self.reading() as db:
+            if self._use_pg:
+                try:
+                    rows = db.execute('SELECT payload FROM campaigns ORDER BY (payload::json->>\'created_at\')::float DESC LIMIT %s', (limit,)).fetchall()
+                    return [json.loads(r[0]) for r in rows]
+                except Exception:
+                    pass
+            rows = db.execute('SELECT payload FROM campaigns').fetchall()
+        campaigns = sorted((json.loads(r[0]) for r in rows), key=lambda c: c['created_at'], reverse=True)
+        return campaigns[:limit]
 
     # ------------------------------------------------------------------
     # Website / Knowledge
@@ -643,7 +666,13 @@ class Store:
 
     def claim(self):
         with self.transaction() as db:
-            all_c = [json.loads(r[0]) for r in db.execute('SELECT payload FROM campaigns').fetchall()]
+            # Only deserialize active campaigns to avoid memory bloat from historical completed workflows
+            query = "SELECT payload FROM campaigns WHERE (payload::json->>'state') NOT IN ('COMPLETED', 'CANCELLED')" if self._use_pg else "SELECT payload FROM campaigns WHERE json_extract(payload, '$.state') NOT IN ('COMPLETED', 'CANCELLED')"
+            try:
+                rows = db.execute(query).fetchall()
+            except Exception:
+                rows = db.execute('SELECT payload FROM campaigns').fetchall()
+            all_c = [json.loads(r[0]) for r in rows]
             active = sum(
                 n['state'] == 'RUNNING' and n['lease_until'] > time.time()
                 for c in all_c for n in c['nodes'].values()
