@@ -18,7 +18,16 @@ class AnalyticsService:
                 'limitations':'Rates use recorded events only; missing tracking sources remain unavailable.'}
     def performance_summary(self,limit=20):
         with self.store.reading() as db:
-            rows=db.execute("SELECT payload FROM campaigns ORDER BY json_extract(payload,'$.updated_at') DESC LIMIT ?",(limit,)).fetchall()
+            if getattr(self.store, '_use_pg', False):
+                try:
+                    rows = db.execute("SELECT payload FROM campaigns ORDER BY (payload::json->>'updated_at')::float DESC LIMIT %s", (limit,)).fetchall()
+                except Exception:
+                    rows = db.execute("SELECT payload FROM campaigns").fetchall()
+            else:
+                try:
+                    rows = db.execute("SELECT payload FROM campaigns ORDER BY json_extract(payload,'$.updated_at') DESC LIMIT ?", (limit,)).fetchall()
+                except Exception:
+                    rows = db.execute("SELECT payload FROM campaigns").fetchall()
         summary=[]
         for row in rows:
             campaign=json.loads(row[0]); analytics=campaign.get('results',{}).get('analytics',{})

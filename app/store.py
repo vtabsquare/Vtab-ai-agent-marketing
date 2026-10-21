@@ -289,7 +289,7 @@ class Store:
         try:
             try:
                 db = self.pool.get_nowait()
-                if self._use_pg and db._conn.closed != 0:
+                if self._use_pg and hasattr(db, "_conn") and db._conn.closed != 0:
                     try:
                         db.close()
                     except Exception:

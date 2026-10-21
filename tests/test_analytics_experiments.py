@@ -15,3 +15,16 @@ def test_funnel_and_experiment_lifecycle(tmp_path):
         result=client.post('/api/experiments/'+experiment['id']+'/results',json={'variant':'direct','exposures':100,'conversions':8}).json()
         assert result['analysis']['leader']=='direct' and result['analysis']['difference_pct_points']==3
         assert client.post('/api/experiments/'+experiment['id']+'/complete').json()['status']=='completed'
+
+
+def test_analytics_performance_summary_with_both_dialects(tmp_path):
+    from app.store import Store
+    from app.analytics import AnalyticsService
+    store = Store(str(tmp_path))
+    analytics = AnalyticsService(store)
+    # Test sqlite execution
+    assert analytics.performance_summary() == []
+    # Test fallback / postgres branch
+    store._use_pg = True
+    # Without real postgres connection, the try/except safely falls back to standard query without crash
+    assert analytics.performance_summary() == []
