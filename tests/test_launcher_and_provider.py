@@ -130,3 +130,12 @@ def test_gemini_provider_handles_markdown_and_heals_missing_fields(monkeypatch):
     assert res.output["variants"][0]["channel"] == "whatsapp"
 
 
+
+
+def test_bandwidth_logging_middleware(tmp_path, caplog):
+    import logging
+    with caplog.at_level(logging.INFO, logger="bandwidth"):
+        with TestClient(create_app(tmp_path, start_worker=False)) as client:
+            res = client.get("/api/health")
+            assert res.status_code == 200
+    assert any("http_request method=GET path=/api/health status=200" in record.message for record in caplog.records)

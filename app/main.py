@@ -2,7 +2,15 @@ import json
 import base64
 import hashlib
 import hmac
+import logging
 import time
+
+bandwidth_logger = logging.getLogger("bandwidth")
+if not bandwidth_logger.handlers:
+    _b_handler = logging.StreamHandler()
+    _b_handler.setFormatter(logging.Formatter("%(message)s"))
+    bandwidth_logger.addHandler(_b_handler)
+bandwidth_logger.setLevel(logging.INFO)
 import secrets
 import os
 import threading
@@ -176,6 +184,32 @@ def create_app(data_dir=None, start_worker=True):
         response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'"
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
+        return response
+
+    @app.middleware("http")
+    async def bandwidth_logging(request: Request, call_next):
+        start_time = time.perf_counter()
+        try:
+            response = await call_next(request)
+        except Exception:
+            bandwidth_logger.exception(
+                "request_failed method=%s path=%s",
+                request.method,
+                request.url.path,
+            )
+            raise
+        duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        content_length = response.headers.get("content-length")
+        if content_length is None and hasattr(response, "body") and response.body is not None:
+            content_length = str(len(response.body))
+        bandwidth_logger.info(
+            "http_request method=%s path=%s status=%s content_length=%s duration_ms=%s",
+            request.method,
+            request.url.path,
+            response.status_code,
+            content_length or "unknown",
+            duration_ms,
+        )
         return response
 
     def perform(fn):
