@@ -652,6 +652,18 @@ class Store:
             db.execute('DELETE FROM leads WHERE id=?', (lead_id,))
         return {'deleted': True, 'id': lead_id}
 
+    def delete_campaign(self, campaign_id):
+        with self.transaction() as db:
+            row = db.execute('SELECT payload FROM campaigns WHERE id=?', (campaign_id,)).fetchone()
+            if not row:
+                raise Missing('Workflow not found.')
+            c = json.loads(row[0])
+            if c.get('state') not in {'COMPLETED', 'CANCELLED'}:
+                raise Conflict('Active workflows cannot be deleted. Stop or cancel the workflow first.')
+            db.execute('DELETE FROM campaigns WHERE id=?', (campaign_id,))
+            db.execute("DELETE FROM memories WHERE scope=?", ('campaign.' + campaign_id,))
+        return {'deleted': True, 'id': campaign_id}
+
     # ------------------------------------------------------------------
     # Campaign mutation / claim / complete
     # ------------------------------------------------------------------

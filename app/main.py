@@ -742,6 +742,10 @@ def create_app(data_dir=None, start_worker=True):
     def cancel(campaign_id: str):
         return perform(lambda: controller.cancel(campaign_id))
 
+    @app.delete("/api/campaigns/{campaign_id}")
+    def delete_campaign(campaign_id: str):
+        return perform(lambda: store.delete_campaign(campaign_id))
+
     @app.post("/api/campaigns/{campaign_id}/retry")
     def retry(campaign_id: str):
         return perform(lambda: controller.retry(campaign_id))

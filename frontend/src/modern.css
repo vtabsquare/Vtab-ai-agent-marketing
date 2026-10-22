@@ -32,3 +32,14 @@ body{background:radial-gradient(ellipse at 88% 0%,#ece8ff 0,transparent 37%),#f6
 .user-profile-info small{display:block;font-size:9px;color:#8e96b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .signout-btn{background:none;border:none;color:#a4adc9;padding:6px;border-radius:6px;display:grid;place-items:center;cursor:pointer;}
 .signout-btn:hover{background:#ffffff15;color:#ff9d8f;}
+
+/* --- Audit Trail Table --- */
+.audit-table-wrap {max-height:480px;overflow-y:auto;margin:15px 0 20px;border:1px solid #e5def0;border-radius:12px;background:#ffffff;}
+.audit-table {width:100%;border-collapse:collapse;font-size:12px;text-align:left;}
+.audit-table th {background:#f7f4fb;color:#63537d;font-weight:600;padding:12px 14px;border-bottom:1px solid #e7dfef;position:sticky;top:0;z-index:2;}
+.audit-table td {padding:11px 14px;border-bottom:1px solid #f2edf8;color:#3b324b;vertical-align:middle;}
+.audit-table tr:hover td {background:#faf7fd;}
+.audit-table code {background:#f2edf9;padding:3px 6px;border-radius:5px;font-size:11px;color:#6c4fb2;font-family:monospace;}
+.status-badge {display:inline-block;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:600;}
+.status-badge.ok {background:#e8f7ee;color:#2b7a4b;}
+.status-badge.err {background:#fde8e8;color:#b92c2c;}
