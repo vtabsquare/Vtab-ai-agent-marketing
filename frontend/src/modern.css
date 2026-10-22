@@ -11,3 +11,24 @@ body{background:radial-gradient(ellipse at 88% 0%,#ece8ff 0,transparent 37%),#f6
 @media(max-width:1100px){.sidebar{width:200px}.main{margin-left:200px}.workflow-layout{grid-template-columns:185px minmax(280px,1fr)}.manager-hero{display:none}.settings-columns{grid-template-columns:1fr}.community-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.sidebar{width:100%;padding:16px;position:static;display:flex;flex-direction:row;flex-wrap:wrap;gap:6px}.logo{width:100%;margin-bottom:12px}.navigation,.new-workflow{font-size:10px;padding:10px 7px;gap:5px;flex:1;justify-content:center}.navigation .count{display:none}.navigation svg,.new-workflow svg{width:14px}.main{margin:0}.overview{padding:28px 19px}.overview-heading h1{font-size:35px}.page-heading p{font-size:13px}.topbar{height:62px}.workflow-layout{display:flex}.team-panel{background:#faf8fd}.team-member{background:#fff;border-color:#e6ddee}.settings-page{padding:28px 18px}.settings-page .page-heading h1{font-size:29px}.settings-columns{grid-template-columns:1fr}.community-grid{grid-template-columns:1fr}.notification-button{padding:10px}.workflow-heading h1{font-size:25px}.card{padding:22px}.sidebar .navigation:last-of-type{grid-column:auto}.create-modal{padding:24px}.summary-stats{grid-template-columns:1fr}.work-inspector{display:block}.inbox-panel{top:145px}.message-feed{height:500px}}
 .map-node b,.map-node.accepted b{color:#655076}.map-node small,.map-node.accepted small{color:#826e91}.parallel-caption{color:#8d739f}.team-note p{color:#82738e}.mini-team{border-color:#e7deef}.input-toast small{color:#af8751}.input-toast b{color:#926d3f}.input-toast p{color:#a08256}.input-toast>div>button{color:#8864ba}.result-heading>span{color:#825fa2}.node-state.accepted{color:#4b8873}.node-state.waiting_input{color:#a47c36}.message-label{color:#739381}.inspector-title,.team-heading{color:#88719b}.community-grid .kicker{margin-bottom:8px}
+
+/* --- Login Screen & User Profile Badge --- */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 88% 0%,#ece8ff 0,transparent 40%),#f6f7fb;}
+.login-card{width:100%;max-width:420px;background:#ffffff;border:1px solid #e2dbed;border-radius:24px;padding:38px 34px 30px;box-shadow:0 25px 70px #35235515,0 4px 16px #46385f08;animation:arrive .25s ease;}
+.login-header{text-align:center;margin-bottom:26px;}
+.login-badge{display:inline-flex;margin-bottom:14px;}
+.login-header h1{font-size:26px;font-weight:700;letter-spacing:-0.6px;color:#27213c;margin:0 0 6px;}
+.login-subtitle{font-size:13px;color:#7b7194;line-height:1.5;margin:0;}
+.login-error{margin:0 0 20px !important;font-size:12px;border-radius:10px;padding:12px 14px;}
+.login-form label{color:#63537b;font-size:12px;font-weight:550;margin-bottom:16px;display:block;}
+.login-form input{margin-top:7px;background:#fbf9ff;border:1px solid #e1d6ef;border-radius:11px;color:#3b2c52;font-size:14px;padding:13px 15px;}
+.login-form input:focus{border-color:#8c68eb;background:#ffffff;box-shadow:0 0 0 3px #8c68eb1a;}
+.login-btn{margin-top:12px;padding:14px;font-size:14px;border-radius:12px;background:#7859e7;color:#ffffff;border:none;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;}
+.login-btn:hover{background:#6848d6;}
+.login-footer{margin-top:24px;padding-top:18px;border-top:1px solid #efeaf7;display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:#8c82a2;}
+.user-profile-badge{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-top:15px;background:#ffffff0d;border:1px solid #ffffff17;border-radius:10px;}
+.user-profile-info{flex:1;min-width:0;}
+.user-profile-info b{display:block;font-size:11px;color:#e5e8f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-profile-info small{display:block;font-size:9px;color:#8e96b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.signout-btn{background:none;border:none;color:#a4adc9;padding:6px;border-radius:6px;display:grid;place-items:center;cursor:pointer;}
+.signout-btn:hover{background:#ffffff15;color:#ff9d8f;}

@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import secrets
 import sqlite3
 import time
@@ -50,10 +51,27 @@ class OperationsService:
     def public_user(item):
         return {key: item[key] for key in ('id', 'email', 'name', 'role', 'active', 'created_at', 'updated_at', 'last_login_at') if key in item}
 
-    def bootstrap_owner(self, password: str):
+    def bootstrap_owner(self, password: str, email: str = 'vitabsquare@gmail.com', name: str = 'Vtab Square Owner'):
+        email = (os.environ.get('MARKETING_ADMIN_EMAIL') or email).strip().lower()
+        now = time.time()
         with self.store.transaction() as db:
-            if db.execute('SELECT 1 FROM users LIMIT 1').fetchone(): return
-            now = time.time(); item = {'id': uuid.uuid4().hex, 'email': 'admin', 'name': 'Workspace Owner', 'role': 'owner',
+            row = db.execute('SELECT id, password_hash, payload FROM users WHERE lower(email)=lower(?)', (email,)).fetchone()
+            if row:
+                if password and not _verify(password, row[1]):
+                    item = json.loads(row[2])
+                    item['updated_at'] = now
+                    db.execute('UPDATE users SET password_hash=?, updated_at=?, payload=? WHERE id=?',
+                               (_password_hash(password), now, json.dumps(item), row[0]))
+                return
+            # If an old dummy 'admin' account exists without logins, update it to the specified email
+            old_admin = db.execute("SELECT id, payload FROM users WHERE lower(email)='admin'").fetchone()
+            if old_admin:
+                item = {'id': old_admin[0], 'email': email, 'name': name, 'role': 'owner',
+                        'active': True, 'created_at': now, 'updated_at': now, 'last_login_at': None}
+                db.execute('UPDATE users SET email=?, password_hash=?, updated_at=?, payload=? WHERE id=?',
+                           (email, _password_hash(password), now, json.dumps(item), old_admin[0]))
+                return
+            item = {'id': uuid.uuid4().hex, 'email': email, 'name': name, 'role': 'owner',
                 'active': True, 'created_at': now, 'updated_at': now, 'last_login_at': None}
             db.execute('INSERT INTO users(id,email,role,active,password_hash,created_at,updated_at,payload) VALUES(?,?,?,?,?,?,?,?)',
                        (item['id'], item['email'], item['role'], 1, _password_hash(password), now, now, json.dumps(item)))
@@ -61,6 +79,8 @@ class OperationsService:
     def authenticate(self, email: str, password: str):
         with self.store.transaction() as db:
             row = db.execute('SELECT * FROM users WHERE lower(email)=lower(?)', (email,)).fetchone()
+            if not row and email.lower() == 'admin':
+                row = db.execute("SELECT * FROM users WHERE role='owner' AND active=1 LIMIT 1").fetchone()
             if not row or not row['active'] or not _verify(password, row['password_hash']): return None
             item = json.loads(row['payload']); item['last_login_at'] = time.time(); item['updated_at'] = item['last_login_at']
             db.execute('UPDATE users SET updated_at=?,payload=? WHERE id=?', (item['updated_at'], json.dumps(item), item['id']))

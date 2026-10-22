@@ -35,6 +35,7 @@ export function Icon({name,size=18}){const p={
  close:<path d="m6 6 12 12M6 18 18 6"/>,
  play:<path d="m8 4 12 8-12 8Z"/>,
  file:<><path d="M5 3h9l5 5v13H5ZM14 3v6h5M8 13h8m-8 4h6"/></>,
+ logout:<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
  link:<><path d="m9 8 3-3a5 5 0 0 1 7 7l-3 3M8 9l-3 3a5 5 0 0 0 7 7l3-3m-6-1 6-6"/></>
  };return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{p[name]||p.grid}</svg>;}
 export function Bot({role,size=42,state}){const b=BOTS[role]||BOTS.manager;return <span className={'bot-avatar '+(state==='RUNNING'?'bot-working':'')} style={{'--bot-color':b.color,width:size,height:size}} aria-label={b.name+' icon'}><Icon name={b.glyph} size={Math.round(size*.47)}/>{state==='RUNNING'&&<i className="bot-pulse"/>}</span>;}

@@ -190,13 +190,13 @@ class ConnectorWriteInput(Contract):
 
 class LoginInput(Contract):
     email: str = Field(min_length=1,max_length=320)
-    password: str = Field(min_length=12,max_length=300)
+    password: str = Field(min_length=6,max_length=300)
 
 class WorkspaceUserInput(Contract):
     email: str = Field(min_length=3,max_length=320,pattern=r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
     name: str = Field(min_length=1,max_length=160)
     role: Literal['owner','admin','editor','analyst','viewer'] = 'editor'
-    password: str = Field(min_length=12,max_length=300)
+    password: str = Field(min_length=6,max_length=300)
 
 class UserStateInput(Contract):
     name: str | None = Field(default=None,min_length=1,max_length=160)

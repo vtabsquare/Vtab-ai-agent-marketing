@@ -58,11 +58,15 @@ def create_app(data_dir=None, start_worker=True):
     analytics_service = AnalyticsService(store)
     connectors = ConnectorService(store)
     operations = OperationsService(store)
-    server = os.environ.get('MARKETING_MODE', 'local') == 'server'
-    password = os.environ.get('MARKETING_ADMIN_PASSWORD', '')
-    if server and len(password)<16:
-        raise RuntimeError('Server mode requires MARKETING_ADMIN_PASSWORD with at least 16 characters.')
-    if server: operations.bootstrap_owner(password)
+    server = (
+        os.environ.get('MARKETING_MODE', '').lower() in {'server', 'production'}
+        or os.environ.get('MARKETING_AUTH_REQUIRED', '').lower() == 'true'
+        or bool(os.environ.get('DATABASE_URL'))
+        or bool(os.environ.get('RENDER'))
+    )
+    admin_email = os.environ.get('MARKETING_ADMIN_EMAIL', 'vitabsquare@gmail.com').strip()
+    password = os.environ.get('MARKETING_ADMIN_PASSWORD', 'Vtab@123').strip()
+    operations.bootstrap_owner(password, email=admin_email)
     controller.demo_delay = 0.65 if start_worker else 0
     stop = threading.Event()
 
@@ -114,22 +118,45 @@ def create_app(data_dir=None, start_worker=True):
 
     @app.middleware("http")
     async def local_guard(request: Request, call_next):
-        public_path=request.url.path.startswith('/forms/') or request.url.path.startswith('/public/forms/') or request.url.path=='/api/public/events'
-        auth_public=request.url.path in {'/api/health','/api/auth/login','/api/webhooks/engagement','/api/webhooks/x','/api/webhooks/facebook','/api/webhooks/instagram','/api/webhooks/whatsapp'}
-        actor=None if server else {'id':'local-owner','email':'local-owner','name':'Local workspace owner','role':'owner','active':True}
-        session_token=request.cookies.get('marketing_session','')
-        if server and not auth_public and not public_path:
-            actor=operations.session_user(session_token)
-            authorization=request.headers.get('authorization','')
-            try:
-                scheme,encoded=authorization.split(' ',1)
-                username,supplied=base64.b64decode(encoded,validate=True).decode().split(':',1)
-                valid=scheme.lower()=='basic' and secrets.compare_digest(username,'admin') and secrets.compare_digest(supplied,password)
-            except Exception: valid=False
-            if valid:
-                actor=next((item for item in operations.users() if item['role']=='owner' and item['active']),actor)
+        public_path = (
+            request.url.path.startswith('/forms/')
+            or request.url.path.startswith('/public/forms/')
+            or request.url.path == '/api/public/events'
+            or request.url.path.startswith('/assets/')
+            or request.url.path in {'/', '/favicon.ico', '/index.html'}
+        )
+        auth_public = request.url.path in {
+            '/api/health',
+            '/api/auth/login',
+            '/api/auth/logout',
+            '/api/webhooks/engagement',
+            '/api/webhooks/x',
+            '/api/webhooks/facebook',
+            '/api/webhooks/instagram',
+            '/api/webhooks/whatsapp',
+        }
+        session_token = request.cookies.get('marketing_session', '')
+        actor = operations.session_user(session_token) if session_token else None
+
+        if not actor:
+            authorization = request.headers.get('authorization', '')
+            if authorization:
+                try:
+                    scheme, encoded = authorization.split(' ', 1)
+                    username, supplied = base64.b64decode(encoded, validate=True).decode().split(':', 1)
+                    if scheme.lower() == 'basic':
+                        user_match = operations.authenticate(username, supplied)
+                        if user_match:
+                            actor = user_match[0]
+                except Exception:
+                    pass
+
+        if server:
+            if not actor and not auth_public and not public_path:
+                return JSONResponse({'detail': 'Sign in to your marketing workspace.'}, status_code=401)
+        else:
             if not actor:
-                return JSONResponse({'detail':'Sign in to your marketing workspace.'},status_code=401,headers={'WWW-Authenticate':'Basic realm="Marketing workspace"'})
+                actor = {'id': 'local-owner', 'email': 'local-owner', 'name': 'Local workspace owner', 'role': 'owner', 'active': True}
         request.state.actor=actor or {'id':'anonymous','email':'anonymous','role':'none'}
         if server and actor and request.method not in {'GET','HEAD','OPTIONS'}:
             restricted=request.url.path.startswith(('/api/users','/api/audit','/api/backup','/api/diagnostics')) or request.url.path=='/api/settings'
@@ -240,23 +267,44 @@ def create_app(data_dir=None, start_worker=True):
 
     @app.post('/api/auth/login')
     def login(data: LoginInput):
-        if not server: return {'user':{'id':'local-owner','email':'local-owner','name':'Local workspace owner','role':'owner','active':True},'mode':'local'}
-        result=operations.authenticate(data.email,data.password)
-        if not result: raise HTTPException(401,'The email or password is incorrect.')
-        user,token=result
-        response=JSONResponse({'user':user,'roles':ROLE_DESCRIPTIONS})
-        response.set_cookie('marketing_session',token,max_age=operations.SESSION_TTL,httponly=True,
-                            secure=os.environ.get('MARKETING_COOKIE_SECURE','true').lower()=='true',samesite='strict',path='/')
+        result = operations.authenticate(data.email, data.password)
+        if not result:
+            raise HTTPException(401, 'The email or password is incorrect.')
+        user, token = result
+        response = JSONResponse({'user': user, 'authenticated': True, 'roles': ROLE_DESCRIPTIONS})
+        response.set_cookie(
+            'marketing_session',
+            token,
+            max_age=operations.SESSION_TTL,
+            httponly=True,
+            secure=os.environ.get('MARKETING_COOKIE_SECURE', 'true').lower() == 'true',
+            samesite='lax',
+            path='/'
+        )
         return response
 
     @app.post('/api/auth/logout')
     def logout(request: Request):
-        operations.logout(request.cookies.get('marketing_session',''))
-        response=JSONResponse({'signed_out':True}); response.delete_cookie('marketing_session',path='/')
+        operations.logout(request.cookies.get('marketing_session', ''))
+        response = JSONResponse({'signed_out': True, 'authenticated': False})
+        response.delete_cookie('marketing_session', path='/')
         return response
 
     @app.get('/api/auth/me')
-    def auth_me(request: Request): return {'user':request.state.actor,'roles':ROLE_DESCRIPTIONS}
+    def auth_me(request: Request):
+        actor = getattr(request.state, 'actor', None)
+        authenticated = bool(
+            actor
+            and actor.get('role') not in {'none', '', None}
+            and actor.get('id') not in {'anonymous', '', None}
+            and (not server or actor.get('id') != 'local-owner')
+        )
+        return {
+            'user': actor if authenticated else None,
+            'authenticated': authenticated,
+            'mode': 'server' if server else 'local',
+            'roles': ROLE_DESCRIPTIONS
+        }
 
     @app.get('/api/users')
     def workspace_users(): return operations.users()
