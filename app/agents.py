@@ -47,9 +47,11 @@ class ResearchSpecialist(Specialist):
             if not source:
                 if sources:
                     source = next(iter(sources.values()))
+                    finding['source_ref'] = source['source_ref']
                 else:
                     brand_url = context.get('brand', {}).get('website') or 'https://www.sshyderabadbiryani.com'
                     source = {'source_ref': 'brand', 'title': context.get('brand', {}).get('name', 'Brand Intelligence'), 'url': brand_url, 'snippet': ''}
+                    finding['source_ref'] = 'brand'
             finding.update(source_url=source['url'],source_title=source['title'],retrieved_at=stamp)
         return response
 
