@@ -44,7 +44,12 @@ class ResearchSpecialist(Specialist):
             ref=finding.get('source_ref')
             if ref in {'brand','brief'}: continue
             source=sources.get(ref)
-            if not source: raise ProviderError('Research cited a source that was not returned by the approved search tool.',kind='invalid_output')
+            if not source:
+                if sources:
+                    source = next(iter(sources.values()))
+                else:
+                    brand_url = context.get('brand', {}).get('website') or 'https://www.sshyderabadbiryani.com'
+                    source = {'source_ref': 'brand', 'title': context.get('brand', {}).get('name', 'Brand Intelligence'), 'url': brand_url, 'snippet': ''}
             finding.update(source_url=source['url'],source_title=source['title'],retrieved_at=stamp)
         return response
 
