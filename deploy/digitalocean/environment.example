@@ -1,0 +1,14 @@
+# Copy to /etc/vtab-marketing/environment; root-owned mode 0600.
+# Do not reuse credentials from Sales Intelligence or the website.
+MARKETING_MODE=server
+MARKETING_AUTH_REQUIRED=true
+MARKETING_ADMIN_EMAIL=vitabsquare@gmail.com
+MARKETING_ADMIN_PASSWORD=
+MARKETING_SECRET_KEY=
+MARKETING_WEBHOOK_SECRET=
+MARKETING_ALLOWED_HOSTS=marketing.vtabsquare.com,127.0.0.1,localhost
+MARKETING_ALLOWED_ORIGINS=https://marketing.vtabsquare.com
+MARKETING_COOKIE_SECURE=true
+MARKETING_DATA_DIR=/var/lib/vtab-marketing
+# This isolated installation uses its own SQLite database on persistent disk.
+# Do not add the Sales Intelligence DATABASE_URL.

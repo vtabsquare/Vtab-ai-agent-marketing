@@ -1,0 +1,34 @@
+[Unit]
+Description=VTAB AI Marketing Manager
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=vtab-marketing
+Group=vtab-marketing
+WorkingDirectory=/opt/vtab-marketing/current
+EnvironmentFile=/etc/vtab-marketing/environment
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/vtab-marketing/current/.venv/bin/python -m uvicorn app.native_server:create_app --factory --host 127.0.0.1 --port 4321 --workers 1 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=45
+UMask=0077
+StateDirectory=vtab-marketing
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/vtab-marketing
+MemoryHigh=384M
+MemoryMax=512M
+CPUQuota=50%
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

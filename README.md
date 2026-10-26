@@ -18,6 +18,10 @@ The launcher downloads Python dependencies on first use and opens http://127.0.0
 6. Live analytics waits 24 hours after publication. Accessible X metrics are measured; unavailable values remain empty. Demo fixtures are clearly labeled.
 7. Community presents signed incoming comments and human reply approvals. Native X callbacks are supported; other platforms use the documented bridge.
 
+## Deploy to DigitalOcean without Docker
+
+Use the dedicated [native DigitalOcean deployment guide](docs/DIGITALOCEAN-NATIVE.md) for `marketing.vtabsquare.com`, with Nginx, systemd, private persistent storage and validated server-mode startup. The service includes the application worker; one process handles queued jobs. Deployment files are prepared, but installation, DNS, HTTPS and live acceptance must be completed on your server.
+
 ## Deploy to Render
 
 Deploy this application directly to [Render](https://render.com) using the included `render.yaml` blueprint or manual setup:
