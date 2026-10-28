@@ -22,9 +22,9 @@ class Vault:
     def decode(self, value):
         if not value or not isinstance(value, str):
             return ''
-        if value.startswith('encrypted:'):
+        while isinstance(value, str) and value.startswith('encrypted:'):
             try:
-                return self.cipher.decrypt(value[10:].encode()).decode()
+                value = self.cipher.decrypt(value[10:].encode()).decode()
             except Exception:
                 return ''
         return value

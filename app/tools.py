@@ -38,7 +38,7 @@ def validate_copy(output, brand):
 
     # When the brand price is free, there's no specific currency amount to enforce.
     # Only check that the copy's price_claim is also free-tier; skip currency enforcement in caption/variants.
-    brand_is_free = is_free(expected_price)
+    brand_is_free = is_free(expected_price) or is_free(brand.get('price', ''))
 
     if brand_is_free:
         # Accept any free-phrased price_claim; reject explicit non-free currency amounts
