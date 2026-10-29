@@ -4441,6 +4441,13 @@ export function getPilotCommunity() {
   return INITIAL_PILOT_COMMUNITY;
 }
 
+export function resetPilotSession() {
+  try {
+    savePilotWorkflows(INITIAL_PILOT_WORKFLOWS);
+    savePilotCommunity(INITIAL_PILOT_COMMUNITY);
+  } catch (e) {}
+}
+
 export function savePilotCommunity(items) {
   try {
     localStorage.setItem(COMMUNITY_KEY, JSON.stringify(items));

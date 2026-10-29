@@ -17,6 +17,7 @@ import {
   savePilotCommunity,
   simulatePilotCampaign,
   completePilotCampaign,
+  resetPilotSession,
   renderPilotSvg
 } from './pilotData.js';
 import './styles.css';
@@ -54,6 +55,7 @@ function App() {
   );
 
   const [pilotDemoEnd, setPilotDemoEnd] = useState(null);
+  const [sessionCompletedCampaign, setSessionCompletedCampaign] = useState(null);
   const [settings, setSettings] = useState(null);
   const [workflows, setWorkflows] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -157,12 +159,16 @@ function App() {
             }
           : res.user
       });
+      if (pilotCheck) {
+        resetPilotSession();
+      }
       if (res.authenticated) await refresh(pilotCheck);
     } catch (e) {
       if (isPilotUrl) {
         try {
           const r = await api('/auth/demo', 'POST');
           try { sessionStorage.setItem('vtab_pilot_session', '1'); } catch (err) {}
+          resetPilotSession();
           setAuth({ authenticated: true, user: { ...r.user, is_pilot: true } });
           await refresh(true);
         } catch (err) {
@@ -301,18 +307,15 @@ function App() {
     if (completed) {
       setWorkflows(getPilotWorkflows());
       setSelected(completed.id);
+      setSessionCompletedCampaign({ ...completed });
       setTimeout(() => setPilotDemoEnd({ ...completed }), 300);
     }
   }
 
   function select(c) {
-    if (isPilot) {
-      const list = getPilotWorkflows();
-      const completedUserWf = list.find(w => w.id.startsWith('pilot_wf_') && w.state === 'COMPLETED');
-      if (completedUserWf && c.id !== completedUserWf.id) {
-        setPilotDemoEnd({ ...completedUserWf });
-        return;
-      }
+    if (isPilot && sessionCompletedCampaign && c.id !== sessionCompletedCampaign.id) {
+      setPilotDemoEnd({ ...sessionCompletedCampaign });
+      return;
     }
     setSelected(c.id);
     setPage('workflows');
@@ -322,13 +325,9 @@ function App() {
   }
 
   function newWorkflow() {
-    if (isPilot) {
-      const list = getPilotWorkflows();
-      const completedUserWf = list.find(w => w.id.startsWith('pilot_wf_') && w.state === 'COMPLETED');
-      if (completedUserWf) {
-        setPilotDemoEnd({ ...completedUserWf });
-        return;
-      }
+    if (isPilot && sessionCompletedCampaign) {
+      setPilotDemoEnd({ ...sessionCompletedCampaign });
+      return;
     }
     setCreateOpen(true);
     setBrief({ ...EMPTY });
