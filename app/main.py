@@ -812,6 +812,15 @@ def create_app(data_dir=None, start_worker=True):
 
     @app.get("/api/campaigns/{campaign_id}/creative.svg")
     def creative(campaign_id: str):
+        if campaign_id.startswith('pilot_'):
+            from app.tools import brand_card
+            svg = brand_card({
+                'headline': 'Vtab Square Autonomous Marketing',
+                'art_direction': 'Modern high-tech SaaS dashboard',
+                'primary_hex': '#1e1b4b',
+                'accent_hex': '#6366f1'
+            }, {'name': 'Vtab Square', 'price': '100% Free to join'})
+            return Response(content=svg, media_type='image/svg+xml')
         c = perform(lambda: store.get(campaign_id))
         if "creative" not in c["results"]:
             raise HTTPException(404, "Creative is not available yet.")

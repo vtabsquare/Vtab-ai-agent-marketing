@@ -15,7 +15,8 @@ import {
   savePilotBrand,
   getPilotCommunity,
   savePilotCommunity,
-  simulatePilotCampaign
+  simulatePilotCampaign,
+  renderPilotSvg
 } from './pilotData.js';
 import './styles.css';
 import './modern.css';
@@ -1246,10 +1247,26 @@ function App() {
                       <p className="caption">{current.results.writing.output?.caption}</p>
                       {current.results?.creative && (
                         <>
-                          <img
-                            src={'/api/campaigns/' + current.id + '/creative.svg?v=' + (current.content_hash || current.nodes?.creative?.generation || '1')}
-                            alt="Campaign creative preview"
-                          />
+                          {current.id.startsWith('pilot_') ? (
+                            <div
+                              className="pilot-svg-preview"
+                              style={{ borderRadius: 10, overflow: 'hidden', margin: '12px 0', border: '1px solid #312e81', background: '#0b0f19' }}
+                              dangerouslySetInnerHTML={{
+                                __html: renderPilotSvg(
+                                  current.results.writing?.output?.headline || current.brief.title,
+                                  current.snapshot?.brand?.name || 'Vtab Square',
+                                  current.snapshot?.brand?.price || 'Free to join',
+                                  current.results.creative?.output?.primary_hex || '#1e1b4b',
+                                  current.results.creative?.output?.accent_hex || '#6366f1'
+                                )
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={'/api/campaigns/' + current.id + '/creative.svg?v=' + (current.content_hash || current.nodes?.creative?.generation || '1')}
+                              alt="Campaign creative preview"
+                            />
+                          )}
                           <p className="creative-direction">{current.results.creative.output?.art_direction}</p>
                         </>
                       )}
@@ -1267,6 +1284,16 @@ function App() {
                     <Icon name="check" />
                     <h3>{current.results.publishing.output?.mode === 'live' ? 'Publication confirmed' : 'Simulation confirmed'}</h3>
                     <p>{current.results.publishing.output?.message || 'Campaign published successfully.'}</p>
+                    {isPilot && (
+                      <button
+                        type="button"
+                        className="button primary full"
+                        style={{ marginTop: 12, background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
+                        onClick={() => setCelebrationCampaign(current)}
+                      >
+                        🎉 View Live Broadcast Celebration
+                      </button>
+                    )}
                   </section>
                 )}
 

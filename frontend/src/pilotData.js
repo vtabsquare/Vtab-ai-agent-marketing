@@ -4571,10 +4571,13 @@ export function simulatePilotCampaign(brief, brand, onProgress) {
     {
       delay: 4800,
       run: (c) => {
-        c.stage = 'manager';
+        c.stage = 'publishing';
         c.nodes.brand_review = { state: 'ACCEPTED', attempt: 1, error: null };
         c.nodes.manager = { state: 'ACCEPTED', attempt: 1, error: null };
-        c.nodes.publishing = { state: 'RUNNING', attempt: 1, error: null };
+        c.nodes.publishing = { state: 'ACCEPTED', attempt: 1, error: null };
+        c.nodes.analytics = { state: 'ACCEPTED', attempt: 1, error: null };
+        c.nodes.optimization = { state: 'ACCEPTED', attempt: 1, error: null };
+        c.nodes.engagement = { state: 'ACCEPTED', attempt: 1, error: null };
         c.state = 'COMPLETED';
         c.results.brand_review = {
           output: {
@@ -4589,16 +4592,31 @@ export function simulatePilotCampaign(brief, brand, onProgress) {
           }
         };
         c.results.publishing = {
-          output: c.brief.destinations.map(d => ({
-            platform: d,
-            post_id: `sim_${d}_${Math.random().toString(36).substr(2, 9)}`,
-            status: 'published_simulated',
-            url: `https://${d}.com/vtabsquare/live_demo`
-          }))
+          output: {
+            mode: 'simulation',
+            message: `Simulated live broadcast completed across ${c.brief.destinations.join(', ')}.`,
+            destinations: c.brief.destinations.map(d => ({
+              platform: d,
+              post_id: `sim_${d}_${Math.random().toString(36).substr(2, 9)}`,
+              status: 'published_simulated',
+              url: `https://${d}.com/vtabsquare/live_demo`
+            }))
+          }
+        };
+        c.results.analytics = {
+          metrics: {
+            mode: 'simulation',
+            impressions: 12500,
+            engagements: 890,
+            engagement_rate_pct: 7.12
+          }
         };
         c.events.push({ role: 'brand_review', kind: 'result', message: 'Brand Guardian: 100% brand claim fidelity verified. Approved for dispatch.', at: Date.now() / 1000 });
         c.events.push({ role: 'manager', kind: 'result', message: 'Marketing Manager: Package approved. Dispatching live simulation to channels.', at: Date.now() / 1000 });
         c.events.push({ role: 'publishing', kind: 'result', message: `Publisher Bot: Successfully published simulated live broadcast to ${c.brief.destinations.join(', ')}!`, at: Date.now() / 1000 });
+        c.events.push({ role: 'analytics', kind: 'result', message: 'Analytics Bot: Initial tracking baseline established. 24h performance window armed.', at: Date.now() / 1000 });
+        c.events.push({ role: 'optimization', kind: 'result', message: 'Optimizer Bot: Autonomous performance optimization monitoring active.', at: Date.now() / 1000 });
+        c.events.push({ role: 'engagement', kind: 'result', message: 'Community Bot: Inbound inquiry monitoring active across all channels.', at: Date.now() / 1000 });
       }
     }
   ];
@@ -4616,4 +4634,40 @@ export function simulatePilotCampaign(brief, brand, onProgress) {
   });
 
   return campaign;
+}
+
+export function renderPilotSvg(headline, brandName, price, primaryHex = '#1e1b4b', accentHex = '#6366f1') {
+  const safeHeadline = String(headline || 'Vtab Square Launch').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const safeBrand = String(brandName || 'Vtab Square').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const safePrice = String(price || 'Free Access').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" width="100%" height="auto" style="display:block;border-radius:10px;">
+    <defs>
+      <linearGradient id="bg_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${primaryHex}"/>
+        <stop offset="100%" stop-color="#0a0e17"/>
+      </linearGradient>
+      <linearGradient id="btn_grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="${accentHex}"/>
+        <stop offset="100%" stop-color="#818cf8"/>
+      </linearGradient>
+    </defs>
+    <rect width="800" height="460" rx="12" fill="url(#bg_grad)"/>
+    <rect x="24" y="24" width="752" height="412" rx="10" fill="none" stroke="${accentHex}" stroke-width="1.2" stroke-opacity="0.35"/>
+    <circle cx="68" cy="68" r="20" fill="${accentHex}" fill-opacity="0.2"/>
+    <text x="68" y="75" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold" fill="${accentHex}" text-anchor="middle">⚡</text>
+    <text x="104" y="64" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#94a3b8" letter-spacing="1.5">AUTONOMOUS MARKETING OS</text>
+    <text x="104" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#f1f5f9">${safeBrand}</text>
+    <text x="68" y="180" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="800" fill="#ffffff">
+      ${safeHeadline.length > 42 ? safeHeadline.slice(0, 42) + '…' : safeHeadline}
+    </text>
+    <rect x="68" y="225" width="230" height="40" rx="6" fill="url(#btn_grad)"/>
+    <text x="183" y="250" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">
+      ${safePrice}
+    </text>
+    <rect x="68" y="325" width="664" height="64" rx="8" fill="#141824" stroke="#232938" stroke-width="1"/>
+    <text x="100" y="362" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#38bdf8">✓ 10/10 AI Agents</text>
+    <text x="310" y="362" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#34d399">✓ Brand Guardian Verified</text>
+    <text x="540" y="362" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#a78bfa">✓ Simulated Live Dispatch</text>
+  </svg>`;
 }
