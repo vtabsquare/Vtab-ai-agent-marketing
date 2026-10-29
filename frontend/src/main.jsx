@@ -41,6 +41,14 @@ const STATUS = {
 
 const EMPTY = { title: '', audience: '', goal: '', instructions: '', checkpoint: 'creative' };
 
+const PILOT_DEFAULT_BRIEF = {
+  title: 'Vtab Square Global AI Masterclass & Live Platform Demo',
+  audience: 'Software developers, engineering leads, SaaS founders, and digital marketing teams',
+  goal: 'Drive 500+ free registrations for the November 20th live virtual masterclass and generate developer community engagement',
+  instructions: 'Highlight autonomous multi-agent coordination, peer code reviews, and emphasize that access is 100% free with no credit card required. Keep the visual aesthetic dark mode with neon indigo and electric blue accents.',
+  checkpoint: 'none'
+};
+
 function App() {
   const [auth, setAuth] = useState(null);
   const isPilot = Boolean(
@@ -68,7 +76,18 @@ function App() {
   const [page, setPage] = useState('workflows');
   const [selected, setSelected] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [brief, setBrief] = useState(EMPTY);
+  const [brief, setBrief] = useState(() => {
+    const isPilotInitial = typeof window !== 'undefined' && Boolean(
+      window.location.pathname.includes('/demo') ||
+      window.location.pathname.includes('/pilot') ||
+      window.location.pathname.includes('/embed') ||
+      window.location.search.includes('demo=') ||
+      window.location.search.includes('pilot=') ||
+      window.location.search.includes('embed=') ||
+      (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('vtab_pilot_session') === '1')
+    );
+    return isPilotInitial ? { ...PILOT_DEFAULT_BRIEF } : { ...EMPTY };
+  });
   const [tab, setTab] = useState('conversation');
   const [focusedBot, setFocusedBot] = useState(null);
   const [auditOpen, setAuditOpen] = useState(false);
@@ -161,6 +180,7 @@ function App() {
       });
       if (pilotCheck) {
         resetPilotSession();
+        setBrief({ ...PILOT_DEFAULT_BRIEF });
       }
       if (res.authenticated) await refresh(pilotCheck);
     } catch (e) {
@@ -169,6 +189,7 @@ function App() {
           const r = await api('/auth/demo', 'POST');
           try { sessionStorage.setItem('vtab_pilot_session', '1'); } catch (err) {}
           resetPilotSession();
+          setBrief({ ...PILOT_DEFAULT_BRIEF });
           setAuth({ authenticated: true, user: { ...r.user, is_pilot: true } });
           await refresh(true);
         } catch (err) {
@@ -330,7 +351,7 @@ function App() {
       return;
     }
     setCreateOpen(true);
-    setBrief({ ...EMPTY });
+    setBrief(isPilot ? { ...PILOT_DEFAULT_BRIEF } : { ...EMPTY });
     setError('');
   }
 
@@ -1762,6 +1783,16 @@ function App() {
                 </select>
               </label>
               <p className="help">A waiting bot pauses its own branch. Independent work and other workflows continue.</p>
+              {isPilot && (
+                <div className="pilot-autofill-banner">
+                  <div className="pilot-autofill-banner-left">
+                    <span className="pilot-autofill-tag">⚡ DEMO AUTO-FILLED</span>
+                    <span className="pilot-autofill-text">
+                      Showcase brief ready! Click <strong>Start workflow</strong> below to launch.
+                    </span>
+                  </div>
+                </div>
+              )}
               <div className="modal-footer">
                 <div>
                   <span className="status-dot" />
@@ -1771,8 +1802,21 @@ function App() {
                       ' · ' +
                       (settings.publishing_mode === 'live' ? 'Live: ' + (settings.platforms || []).join(', ') : 'Simulation')}
                 </div>
-                <button className="button primary" disabled={busy || (!isPilot && !settings.ready)}>
-                  Start workflow<Icon name="arrow" />
+                <button
+                  className={`button primary ${isPilot ? 'pilot-start-btn' : ''}`}
+                  disabled={busy || (!isPilot && !settings.ready)}
+                >
+                  {isPilot ? (
+                    <>
+                      <span className="pilot-start-indicator">⚡</span>
+                      <span>Start workflow</span>
+                      <Icon name="arrow" />
+                    </>
+                  ) : (
+                    <>
+                      Start workflow<Icon name="arrow" />
+                    </>
+                  )}
                 </button>
               </div>
               {!settings.ready && !isPilot && (
