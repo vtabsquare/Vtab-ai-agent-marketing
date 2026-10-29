@@ -4694,65 +4694,87 @@ export function simulatePilotCampaign(brief, brand, onProgress) {
     {
       delay: 4500,
       run: (c) => {
-        c.stage = 'publishing';
+        // Brand Guardian done, Marketing Manager requests YOUR approval before publishing
         c.nodes.brand_review = { state: 'ACCEPTED', attempt: 1, error: null };
-        c.nodes.publishing = { state: 'RUNNING', attempt: 1, error: null };
+        c.nodes.publishing = { state: 'PENDING', attempt: 0, error: null };
         c.results.brand_review = { output: brandReviewOutput };
+        c.state = 'AWAITING_APPROVAL';
+        const approvalRequestId = 'pilot_approval_' + id;
+        c.input_requests = [{
+          id: approvalRequestId,
+          role: 'manager',
+          kind: 'approval',
+          status: 'OPEN',
+          question: 'Your campaign is ready. Approve to publish?',
+          reason: `Marketing Manager has verified the complete package for "${campaignHeadline}" — content, creative, brand fidelity all confirmed. Your approval dispatches the simulated live broadcast to ${destinations.join(', ')}.`
+        }];
         c.events.push({
           role: 'brand_review',
           kind: 'result',
-          message: `Brand Guardian: 100% brand claim fidelity verified. Pricing claim "${cleanPrice}" strictly matches approved brand facts.`,
+          message: `Brand Guardian: 100% brand claim fidelity verified. Pricing claim "${cleanPrice}" strictly matches approved brand facts. ✓`,
           at: Date.now() / 1000
         });
         c.events.push({
           role: 'manager',
-          kind: 'result',
-          message: `Marketing Manager: Package approved. Dispatching simulated live broadcast to ${destinations.join(', ')}.`,
-          at: Date.now() / 1000
-        });
-      }
-    },
-    {
-      delay: 5600,
-      run: (c) => {
-        c.stage = 'completed';
-        c.nodes.manager = { state: 'ACCEPTED', attempt: 1, error: null };
-        c.nodes.publishing = { state: 'ACCEPTED', attempt: 1, error: null };
-        c.nodes.analytics = { state: 'ACCEPTED', attempt: 1, error: null };
-        c.nodes.optimization = { state: 'ACCEPTED', attempt: 1, error: null };
-        c.nodes.engagement = { state: 'ACCEPTED', attempt: 1, error: null };
-        c.state = 'COMPLETED';
-        c.results.publishing = { output: publishingOutput };
-        c.results.analytics = analyticsOutput;
-        c.results.optimization = optimizerOutput;
-        c.results.engagement = communityOutput;
-        c.events.push({
-          role: 'publishing',
-          kind: 'result',
-          message: `Publisher Bot: Successfully published simulated live broadcast to ${destinations.join(', ')}!`,
-          at: Date.now() / 1000
-        });
-        c.events.push({
-          role: 'analytics',
-          kind: 'result',
-          message: 'Analytics Bot: Initial tracking baseline established. 24h performance window armed.',
-          at: Date.now() / 1000
-        });
-        c.events.push({
-          role: 'optimization',
-          kind: 'result',
-          message: 'Optimizer Bot: Autonomous performance optimization monitoring active.',
-          at: Date.now() / 1000
-        });
-        c.events.push({
-          role: 'engagement',
-          kind: 'result',
-          message: 'Community Bot: Inbound inquiry monitoring active across all channels.',
+          kind: 'input_needed',
+          message: `Marketing Manager: Full package verified and ready for dispatch to ${destinations.join(', ')}. Waiting for your approval to publish the simulated live broadcast.`,
           at: Date.now() / 1000
         });
       }
     }
   ];
+
+  // Export a helper so the approval button in main.jsx can complete this pilot campaign
+  campaign._completePilot = () => {
+    const list = getPilotWorkflows();
+    const target = list.find(item => item.id === id);
+    if (!target) return null;
+    target.state = 'COMPLETED';
+    target.stage = 'completed';
+    target.input_requests = target.input_requests.map(r => ({ ...r, status: 'CLOSED' }));
+    target.nodes.manager = { state: 'ACCEPTED', attempt: 1, error: null };
+    target.nodes.publishing = { state: 'ACCEPTED', attempt: 1, error: null };
+    target.nodes.analytics = { state: 'ACCEPTED', attempt: 1, error: null };
+    target.nodes.optimization = { state: 'ACCEPTED', attempt: 1, error: null };
+    target.nodes.engagement = { state: 'ACCEPTED', attempt: 1, error: null };
+    target.results.manager = { output: { recommendation: 'APPROVE', summary: 'Complete multi-agent package approved.' } };
+    target.results.publishing = { output: publishingOutput };
+    target.results.analytics = analyticsOutput;
+    target.results.optimization = optimizerOutput;
+    target.results.engagement = communityOutput;
+    target.events.push({
+      role: 'manager',
+      kind: 'result',
+      message: `Marketing Manager: Approval received. Dispatching simulated live broadcast to ${destinations.join(', ')}.`,
+      at: Date.now() / 1000
+    });
+    target.events.push({
+      role: 'publishing',
+      kind: 'result',
+      message: `Publisher Bot: Successfully published simulated live broadcast to ${destinations.join(', ')}! Campaign is now live.`,
+      at: Date.now() / 1000
+    });
+    target.events.push({
+      role: 'analytics',
+      kind: 'result',
+      message: 'Analytics Bot: Initial tracking baseline established. 24h performance window armed.',
+      at: Date.now() / 1000
+    });
+    target.events.push({
+      role: 'optimization',
+      kind: 'result',
+      message: 'Optimizer Bot: Autonomous performance optimization monitoring active.',
+      at: Date.now() / 1000
+    });
+    target.events.push({
+      role: 'engagement',
+      kind: 'result',
+      message: 'Community Bot: Inbound inquiry monitoring active across all channels.',
+      at: Date.now() / 1000
+    });
+    savePilotWorkflows(list);
+    return { ...target };
+  };
 
   steps.forEach(step => {
     setTimeout(() => {
@@ -4767,6 +4789,91 @@ export function simulatePilotCampaign(brief, brand, onProgress) {
   });
 
   return campaign;
+}
+
+/**
+ * Called when user clicks "Approve" in pilot mode.
+ * Completes the AWAITING_APPROVAL → COMPLETED transition in localStorage.
+ */
+export function completePilotCampaign(campaignId, onProgress) {
+  const list = getPilotWorkflows();
+  const target = list.find(item => item.id === campaignId);
+  if (!target || target.state !== 'AWAITING_APPROVAL') return null;
+
+  // Close the pending approval requests
+  if (target.input_requests) {
+    target.input_requests = target.input_requests.map(r =>
+      r.kind === 'approval' && r.status === 'OPEN' ? { ...r, status: 'CLOSED' } : r
+    );
+  }
+
+  target.state = 'COMPLETED';
+  target.stage = 'completed';
+  target.nodes.manager = { state: 'ACCEPTED', attempt: 1, error: null };
+  target.nodes.publishing = { state: 'ACCEPTED', attempt: 1, error: null };
+  target.nodes.analytics = { state: 'ACCEPTED', attempt: 1, error: null };
+  target.nodes.optimization = { state: 'ACCEPTED', attempt: 1, error: null };
+  target.nodes.engagement = { state: 'ACCEPTED', attempt: 1, error: null };
+
+  const dest = target.brief?.destinations || ['instagram', 'facebook', 'whatsapp'];
+  const cleanP = (target.snapshot?.brand?.price || 'Free to join').replace(/\.+$/, '').trim();
+
+  target.results.manager = {
+    output: { recommendation: 'APPROVE', summary: 'You approved the campaign package. Simulated live dispatch initiated.' }
+  };
+  target.results.publishing = {
+    output: {
+      mode: 'simulation',
+      message: `Simulated live broadcast completed across ${dest.join(', ')}.`,
+      destinations: dest.map(d => ({
+        platform: d,
+        post_id: `sim_${d}_${Math.random().toString(36).substr(2, 9)}`,
+        status: 'published_simulated',
+        url: `https://${d}.com/vtabsquare/live_demo`
+      }))
+    }
+  };
+  target.results.analytics = {
+    metrics: { mode: 'simulation', impressions: 14850, engagements: 1240, clicks: 720, engagement_rate_pct: 8.35, ctr_pct: 4.85 }
+  };
+  target.results.optimization = {
+    recommendations: [`Prioritize ${dest[0] || 'Instagram'} for maximum mobile CTR`]
+  };
+  target.results.engagement = {
+    status: 'ACTIVE_MONITORING',
+    active_channels: dest
+  };
+
+  const now = Date.now() / 1000;
+  target.events.push({
+    role: 'manager', kind: 'result',
+    message: `Marketing Manager: Your approval is recorded. Dispatching simulated live broadcast to ${dest.join(', ')}.`,
+    at: now
+  });
+  target.events.push({
+    role: 'publishing', kind: 'result',
+    message: `Publisher Bot: Successfully published simulated live broadcast to ${dest.join(', ')}! Your campaign is now live.`,
+    at: now
+  });
+  target.events.push({
+    role: 'analytics', kind: 'result',
+    message: 'Analytics Bot: Initial tracking baseline established. 24h performance window armed.',
+    at: now
+  });
+  target.events.push({
+    role: 'optimization', kind: 'result',
+    message: 'Optimizer Bot: Autonomous performance optimization monitoring active.',
+    at: now
+  });
+  target.events.push({
+    role: 'engagement', kind: 'result',
+    message: 'Community Bot: Inbound inquiry monitoring active across all channels.',
+    at: now
+  });
+
+  savePilotWorkflows(list);
+  if (onProgress) onProgress({ ...target });
+  return { ...target };
 }
 
 export function renderPilotSvg(headline, brandName, price, primaryHex = '#1e1b4b', accentHex = '#6366f1', audience = '', destinations = ['instagram', 'facebook', 'whatsapp', 'linkedin']) {

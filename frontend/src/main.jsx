@@ -5,6 +5,7 @@ import { ControlCenter } from './ControlCenter.jsx';
 import { CommunityInbox } from './CommunityInbox.jsx';
 import { Login } from './Login.jsx';
 import { CelebrationModal } from './CelebrationModal.jsx';
+import { PilotDemoEndModal } from './PilotDemoEndModal.jsx';
 import {
   DEFAULT_PILOT_BRAND,
   INITIAL_PILOT_WORKFLOWS,
@@ -16,10 +17,12 @@ import {
   getPilotCommunity,
   savePilotCommunity,
   simulatePilotCampaign,
+  completePilotCampaign,
   renderPilotSvg
 } from './pilotData.js';
 import './styles.css';
 import './modern.css';
+import './pilot-demo-end.css';
 import { api } from './api.js';
 
 const STATUS = {
@@ -52,6 +55,7 @@ function App() {
   );
 
   const [celebrationCampaign, setCelebrationCampaign] = useState(null);
+  const [pilotDemoEnd, setPilotDemoEnd] = useState(null);
   const [settings, setSettings] = useState(null);
   const [workflows, setWorkflows] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -1126,14 +1130,13 @@ function App() {
                             disabled={busy}
                             onClick={() => {
                               if (isPilot) {
-                                const list = getPilotWorkflows();
-                                const wf = list.find(w => w.id === current.id);
-                                if (wf) {
-                                  wf.state = 'COMPLETED';
-                                  wf.nodes.publishing = { state: 'ACCEPTED', attempt: 1, error: null };
-                                  savePilotWorkflows(list);
-                                  setWorkflows([...list]);
-                                  setCelebrationCampaign({ ...wf });
+                                const completed = completePilotCampaign(current.id, (updated) => {
+                                  setWorkflows(getPilotWorkflows());
+                                });
+                                if (completed) {
+                                  setWorkflows(getPilotWorkflows());
+                                  // Show the Demo Ended screen after a brief animation delay
+                                  setTimeout(() => setPilotDemoEnd({ ...completed }), 600);
                                 }
                                 return;
                               }
@@ -1624,9 +1627,8 @@ function App() {
                   const newWf = simulatePilotCampaign(targetBrief, form?.brand || getPilotBrand(), (updated) => {
                     const refreshed = getPilotWorkflows();
                     setWorkflows([...refreshed]);
-                    if (updated.state === 'COMPLETED') {
-                      setCelebrationCampaign({ ...updated });
-                    }
+                    // COMPLETED is only reached after user clicks Approve (via completePilotCampaign)
+                    // AWAITING_APPROVAL pause triggers a refresh so the approval card shows in the inspector
                   });
                   setWorkflows(getPilotWorkflows());
                   select(newWf);
@@ -1782,6 +1784,13 @@ function App() {
           campaign={celebrationCampaign}
           onClose={() => setCelebrationCampaign(null)}
           onView={(c) => select(c)}
+        />
+      )}
+
+      {pilotDemoEnd && (
+        <PilotDemoEndModal
+          campaign={pilotDemoEnd}
+          onClose={() => setPilotDemoEnd(null)}
         />
       )}
     </div>
