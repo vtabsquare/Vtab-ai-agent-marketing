@@ -1253,11 +1253,13 @@ function App() {
                               style={{ borderRadius: 10, overflow: 'hidden', margin: '12px 0', border: '1px solid #312e81', background: '#0b0f19' }}
                               dangerouslySetInnerHTML={{
                                 __html: renderPilotSvg(
-                                  current.results.writing?.output?.headline || current.brief.title,
+                                  current.results.writing?.output?.headline || current.brief?.title,
                                   current.snapshot?.brand?.name || 'Vtab Square',
-                                  current.snapshot?.brand?.price || 'Free to join',
+                                  current.results.writing?.output?.price_claim || current.snapshot?.brand?.price || 'Free to join',
                                   current.results.creative?.output?.primary_hex || '#1e1b4b',
-                                  current.results.creative?.output?.accent_hex || '#6366f1'
+                                  current.results.creative?.output?.accent_hex || '#6366f1',
+                                  current.brief?.audience || '',
+                                  current.brief?.destinations || current.snapshot?.platforms || ['instagram', 'facebook', 'whatsapp', 'linkedin']
                                 )
                               }}
                             />
@@ -1268,6 +1270,32 @@ function App() {
                             />
                           )}
                           <p className="creative-direction">{current.results.creative.output?.art_direction}</p>
+                          {current.results.writing?.output?.variants?.length > 0 && (
+                            <div className="pilot-variants-box" style={{ marginTop: 14, borderTop: '1px solid #e0e7ff', paddingTop: 12 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                <h4 style={{ fontSize: 13, textTransform: 'uppercase', color: '#4f46e5', letterSpacing: '0.05em', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <Icon name="link" size={14} /> Multi-Channel Copy Adaptations
+                                </h4>
+                                <span style={{ fontSize: 11, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>
+                                  {current.results.writing.output.variants.length} Channels
+                                </span>
+                              </div>
+                              <div style={{ display: 'grid', gap: 10 }}>
+                                {current.results.writing.output.variants.map((v, i) => (
+                                  <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                      <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#4f46e5', background: '#eef2ff', padding: '2px 8px', borderRadius: 4 }}>
+                                        {v.destination}
+                                      </span>
+                                      <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 600 }}>✓ Verified Live Simulation</span>
+                                    </div>
+                                    <div style={{ fontWeight: 600, fontSize: 13, color: '#1e293b', marginBottom: 4 }}>{v.headline}</div>
+                                    <div style={{ fontSize: 12, color: '#475569', whiteSpace: 'pre-line', lineHeight: 1.45 }}>{v.body}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </>
                       )}
                     </>
