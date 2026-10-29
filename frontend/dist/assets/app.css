@@ -1447,3 +1447,125 @@ body{background:radial-gradient(ellipse at 88% 0%,#ece8ff 0,transparent 37%),#f6
   0% { transform: scale(1); }
   100% { transform: scale(1.25); }
 }
+
+
+/* ==========================================================================
+   Premium Subtle Custom Scrollbars (Universal / Cross-Browser)
+   ========================================================================== */
+/* Firefox standard scrollbars */
+html, body, * {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent !important;
+}
+
+/* WebKit (Chrome, Edge, Safari, Opera) */
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+  margin: 3px !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25) !important;
+  border-radius: 9999px !important;
+  border: 1px solid transparent !important;
+  background-clip: padding-box !important;
+  transition: background 0.2s ease-in-out !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.55) !important;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(139, 92, 246, 0.8) !important;
+}
+
+/* Hide ugly Windows / Edge stepper arrows */
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Dark Sidebar & Pilot Panels scrollbar refinement */
+.sidebar *,
+.workflow-nav,
+.workflow-nav *,
+.pilot-end-card,
+.create-modal {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent !important;
+}
+
+.sidebar ::-webkit-scrollbar-thumb,
+.workflow-nav::-webkit-scrollbar-thumb,
+.pilot-end-card::-webkit-scrollbar-thumb,
+.create-modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+.sidebar ::-webkit-scrollbar-thumb:hover,
+.workflow-nav::-webkit-scrollbar-thumb:hover,
+.pilot-end-card::-webkit-scrollbar-thumb:hover,
+.create-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.6) !important;
+}
+
+/* ==========================================================================
+   Performance Metrics Overflow Fix & Card Refinement
+   ========================================================================== */
+.result-card .metrics,
+.metrics {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  align-items: flex-start !important;
+  margin-top: 10px !important;
+}
+
+.result-card .metrics > div,
+.metrics > div {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 2px !important;
+  box-sizing: border-box !important;
+}
+
+.result-card .metrics b,
+.metrics b {
+  display: block !important;
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.4px !important;
+  color: #8b62b5 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: 100% !important;
+}
+
+.result-card .metrics small,
+.metrics small {
+  display: block !important;
+  font-size: 9.5px !important;
+  line-height: 1.35 !important;
+  margin-top: 4px !important;
+  color: #9284a3 !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  letter-spacing: 0.1px !important;
+}

@@ -1453,17 +1453,17 @@ function App() {
                         <span>{m.mode === 'live' ? 'Live Measured' : 'Sample'}</span>
                       </div>
                       <div className="metrics">
-                        <div>
+                        <div title={`${m.impressions != null ? m.impressions.toLocaleString() : 'Pending (24h)'} Impressions`}>
                           <b>{m.impressions != null ? m.impressions.toLocaleString() : 'Pending (24h)'}</b>
                           <small>Impressions</small>
                         </div>
-                        <div>
-                          <b>{eng != null ? eng : 0}</b>
-                          <small>Interactions (Likes/Comments)</small>
+                        <div title={`${eng != null ? eng : 0} Interactions (Likes/Comments)`}>
+                          <b>{eng != null ? (typeof eng === 'number' ? eng.toLocaleString() : eng) : 0}</b>
+                          <small>Interactions</small>
                         </div>
-                        <div>
+                        <div title={`${m.engagement_rate_pct != null ? m.engagement_rate_pct + '%' : '—'} Engagement Rate`}>
                           <b>{m.engagement_rate_pct != null ? m.engagement_rate_pct + '%' : '—'}</b>
-                          <small>Engagement Rate</small>
+                          <small>Engagement</small>
                         </div>
                       </div>
                       <p className="help">
