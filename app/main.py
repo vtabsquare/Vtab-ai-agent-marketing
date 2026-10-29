@@ -841,7 +841,7 @@ def create_app(data_dir=None, start_worker=True):
     def index():
         if not (dist / "index.html").exists():
             raise HTTPException(503, "Bundled dashboard is missing. Re-extract the complete project ZIP.")
-        return FileResponse(dist / "index.html")
+        return FileResponse(dist / "index.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
 
     @app.get("/demo")
     @app.get("/pilot")
@@ -851,7 +851,7 @@ def create_app(data_dir=None, start_worker=True):
             raise HTTPException(503, "Bundled dashboard is missing. Re-extract the complete project ZIP.")
         session_token = request.cookies.get('marketing_session', '')
         actor = operations.session_user(session_token) if session_token else None
-        response = FileResponse(dist / "index.html")
+        response = FileResponse(dist / "index.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
         if not actor:
             user, token = operations.get_or_create_pilot_session()
             response.set_cookie(

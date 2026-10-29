@@ -4,7 +4,6 @@ import { Bot, Icon, BOTS, ROLES } from './Bots.jsx';
 import { ControlCenter } from './ControlCenter.jsx';
 import { CommunityInbox } from './CommunityInbox.jsx';
 import { Login } from './Login.jsx';
-import { CelebrationModal } from './CelebrationModal.jsx';
 import { PilotDemoEndModal } from './PilotDemoEndModal.jsx';
 import {
   DEFAULT_PILOT_BRAND,
@@ -54,7 +53,6 @@ function App() {
     (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('vtab_pilot_session') === '1')
   );
 
-  const [celebrationCampaign, setCelebrationCampaign] = useState(null);
   const [pilotDemoEnd, setPilotDemoEnd] = useState(null);
   const [settings, setSettings] = useState(null);
   const [workflows, setWorkflows] = useState([]);
@@ -293,6 +291,17 @@ function App() {
       setError(e.message);
     } finally {
       setBusy(false);
+    }
+  }
+
+  function handlePilotApprove(campaignId) {
+    const completed = completePilotCampaign(campaignId, () => {
+      setWorkflows(getPilotWorkflows());
+    });
+    if (completed) {
+      setWorkflows(getPilotWorkflows());
+      setSelected(completed.id);
+      setTimeout(() => setPilotDemoEnd({ ...completed }), 300);
     }
   }
 
@@ -1060,6 +1069,54 @@ function App() {
                           ))}
                         </div>
                       )}
+                      {isPilot && current?.state === 'AWAITING_APPROVAL' && (
+                        <div className="pilot-approval-banner" style={{
+                          margin: '14px 10px',
+                          background: 'linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%)',
+                          border: '2px solid #818cf8',
+                          borderRadius: 12,
+                          padding: '16px 18px',
+                          boxShadow: '0 8px 30px rgba(99, 102, 241, 0.45)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 16
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <Bot role="manager" size={40} />
+                            <div>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: '#a5b4fc', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                                ⚡ Action Required
+                              </div>
+                              <div style={{ fontSize: 14, fontWeight: 800, color: '#ffffff', margin: '2px 0' }}>
+                                Content & Creative Ready for Approval
+                              </div>
+                              <div style={{ fontSize: 12, color: '#cbd5e1' }}>
+                                Marketing Manager verified 100% Brand Guardian fidelity. Approve to broadcast!
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="button primary"
+                            style={{
+                              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              padding: '10px 20px',
+                              fontSize: 13,
+                              borderRadius: 8,
+                              border: 'none',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 14px rgba(99, 102, 241, 0.5)',
+                              flexShrink: 0
+                            }}
+                            onClick={() => handlePilotApprove(current.id)}
+                          >
+                            Approve & Broadcast →
+                          </button>
+                        </div>
+                      )}
                       <div ref={feedEnd} />
                     </div>
 
@@ -1130,14 +1187,7 @@ function App() {
                             disabled={busy}
                             onClick={() => {
                               if (isPilot) {
-                                const completed = completePilotCampaign(current.id, (updated) => {
-                                  setWorkflows(getPilotWorkflows());
-                                });
-                                if (completed) {
-                                  setWorkflows(getPilotWorkflows());
-                                  // Show the Demo Ended screen after a brief animation delay
-                                  setTimeout(() => setPilotDemoEnd({ ...completed }), 600);
-                                }
+                                handlePilotApprove(current.id);
                                 return;
                               }
                               act(() =>
@@ -1320,9 +1370,9 @@ function App() {
                         type="button"
                         className="button primary full"
                         style={{ marginTop: 12, background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
-                        onClick={() => setCelebrationCampaign(current)}
+                        onClick={() => setPilotDemoEnd(current)}
                       >
-                        🎉 View Live Broadcast Celebration
+                        🚀 View Demo Summary & Contact For More
                       </button>
                     )}
                   </section>
@@ -1779,18 +1829,11 @@ function App() {
         </div>
       )}
 
-      {celebrationCampaign && (
-        <CelebrationModal
-          campaign={celebrationCampaign}
-          onClose={() => setCelebrationCampaign(null)}
-          onView={(c) => select(c)}
-        />
-      )}
-
       {pilotDemoEnd && (
         <PilotDemoEndModal
           campaign={pilotDemoEnd}
           onClose={() => setPilotDemoEnd(null)}
+          onView={(c) => select(c)}
         />
       )}
     </div>

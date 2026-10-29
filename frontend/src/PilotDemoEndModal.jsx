@@ -1,15 +1,19 @@
 import React from 'react';
 import { Icon } from './Bots.jsx';
 
-export function PilotDemoEndModal({ campaign, onClose }) {
+export function PilotDemoEndModal({ campaign, onClose, onView }) {
   if (!campaign) return null;
   const dest = campaign.brief?.destinations?.length
     ? campaign.brief.destinations
     : ['instagram', 'facebook', 'whatsapp'];
 
   const platformLabels = {
-    instagram: 'Instagram', facebook: 'Facebook', whatsapp: 'WhatsApp',
-    linkedin: 'LinkedIn', discord: 'Discord', twitter: 'X / Twitter'
+    instagram: 'Instagram',
+    facebook: 'Facebook',
+    whatsapp: 'WhatsApp',
+    linkedin: 'LinkedIn',
+    discord: 'Discord',
+    twitter: 'X / Twitter'
   };
 
   return (
@@ -20,15 +24,15 @@ export function PilotDemoEndModal({ campaign, onClose }) {
         </button>
 
         {/* Top Badge */}
-        <div className="pilot-end-badge">✦ PILOT DEMO COMPLETE</div>
+        <div className="pilot-end-badge">✦ PILOT DEMO COMPLETED</div>
 
         {/* Hero Headline */}
         <div className="pilot-end-rocket">🚀</div>
         <h2 className="pilot-end-title">
-          Your AI campaign<br />just went live.
+          Demo Ended · Contact For More
         </h2>
         <p className="pilot-end-subtitle">
-          10 autonomous bots — research, strategy, creative, brand verification, multi-channel publishing — all finished in under 6 seconds. This was the <strong>sandbox preview</strong>.
+          Your campaign was synthesized, verified, and simulated live across all channels! <strong>10 autonomous AI agents</strong> coordinated research, copy, creative design, and live publishing in seconds.
         </p>
 
         {/* Campaign Summary Strip */}
@@ -43,44 +47,44 @@ export function PilotDemoEndModal({ campaign, onClose }) {
           </div>
           <div className="pilot-end-summary-row">
             <span className="pilot-end-label">Bots Deployed</span>
-            <span className="pilot-end-value">10/10 Synchronized ✓</span>
+            <span className="pilot-end-value" style={{ color: '#38bdf8' }}>10/10 AI Agents Synchronized ✓</span>
           </div>
           <div className="pilot-end-summary-row">
-            <span className="pilot-end-label">Brand Fidelity</span>
-            <span className="pilot-end-value">100% Verified ✓</span>
+            <span className="pilot-end-label">Brand Guardian</span>
+            <span className="pilot-end-value" style={{ color: '#34d399' }}>100% Price & Claim Fidelity ✓</span>
           </div>
         </div>
 
-        {/* What's Unlocked in Full */}
+        {/* What's Unlocked in Full Engine */}
         <div className="pilot-end-features">
-          <div className="pilot-end-features-title">What you unlock with the full engine:</div>
+          <div className="pilot-end-features-title">Unlock the Full Enterprise Engine:</div>
           <div className="pilot-end-feature-grid">
             <div className="pilot-end-feature-item">
               <span className="pilot-end-feature-icon">⚡</span>
               <div>
-                <b>Live Multi-Channel Publishing</b>
-                <small>Instagram, Facebook, WhatsApp, LinkedIn — real posts, real audience</small>
+                <b>Live Multi-Channel Broadcasting</b>
+                <small>Official Instagram Graph API, Facebook Graph API, WhatsApp Cloud API & LinkedIn API integration.</small>
               </div>
             </div>
             <div className="pilot-end-feature-item">
-              <span className="pilot-end-feature-icon">🎯</span>
+              <span className="pilot-end-feature-icon">🛡️</span>
               <div>
-                <b>Always-on AI Brand Guardian</b>
-                <small>Zero hallucinations. Every claim fact-checked before dispatch.</small>
+                <b>Zero-Hallucination Brand Guardian</b>
+                <small>Guarantees 100% price accuracy, factual integrity, and tone consistency on every single post.</small>
               </div>
             </div>
             <div className="pilot-end-feature-item">
-              <span className="pilot-end-feature-icon">📊</span>
+              <span className="pilot-end-feature-icon">📈</span>
               <div>
-                <b>Real-time Analytics & Optimization</b>
-                <small>CTR, engagement, and conversion tracked with autonomous tuning.</small>
+                <b>Autonomous Performance Optimization</b>
+                <small>Real-time analytics, automated A/B headline testing, and 24-hour engagement tracking loops.</small>
               </div>
             </div>
             <div className="pilot-end-feature-item">
               <span className="pilot-end-feature-icon">💬</span>
               <div>
-                <b>AI Community Inbox</b>
-                <small>Auto-draft replies for every comment across all your platforms.</small>
+                <b>AI Community Inbox & Lead Responder</b>
+                <small>Instantly triage comments and inquiries with approved AI drafts and outbound CRM webhooks.</small>
               </div>
             </div>
           </div>
@@ -89,7 +93,7 @@ export function PilotDemoEndModal({ campaign, onClose }) {
         {/* CTA Section */}
         <div className="pilot-end-cta-section">
           <p className="pilot-end-cta-tagline">
-            Ready to run this for <em>your</em> brand — for real?
+            Ready to deploy autonomous AI marketing for <em>your business</em>?
           </p>
           <a
             href="https://www.vtabsquare.com"
@@ -97,17 +101,43 @@ export function PilotDemoEndModal({ campaign, onClose }) {
             rel="noreferrer"
             className="pilot-end-cta-btn"
           >
-            🔥 Book Enterprise Access — It's Free
+            🔥 Deploy This Engine — Book Enterprise Access
           </a>
-          <a
-            href="mailto:contact@vtabsquare.com?subject=AI Marketing Engine Enterprise Inquiry"
-            className="pilot-end-contact-link"
-          >
-            Or email us at contact@vtabsquare.com ↗
-          </a>
+          
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 10 }}>
+            <a
+              href="mailto:contact@vtabsquare.com?subject=Enterprise Inquiry: AI Marketing Manager Engine"
+              className="pilot-end-contact-pill"
+            >
+              ✉️ Email Us (contact@vtabsquare.com)
+            </a>
+            <a
+              href="https://wa.me/919840211234?text=Hi%20Vtab%20Square%2C%20I%20tested%20your%20AI%20Marketing%20Manager%20Pilot%20Demo%20and%20would%20like%20to%20learn%20more."
+              target="_blank"
+              rel="noreferrer"
+              className="pilot-end-contact-pill"
+              style={{ borderColor: '#25d366', color: '#86efac' }}
+            >
+              💬 Chat on WhatsApp
+            </a>
+          </div>
         </div>
 
-        <p className="pilot-end-footer">
+        <div style={{ marginTop: 16 }}>
+          <button
+            type="button"
+            className="button ghost full"
+            style={{ color: '#94a3b8', fontSize: 13 }}
+            onClick={() => {
+              if (onView) onView(campaign);
+              onClose();
+            }}
+          >
+            View Completed Campaign & Creative Assets →
+          </button>
+        </div>
+
+        <p className="pilot-end-footer" style={{ marginTop: 14 }}>
           Vtab Square · Autonomous Marketing OS · <a href="https://www.vtabsquare.com" target="_blank" rel="noreferrer">vtabsquare.com</a>
         </p>
       </div>
