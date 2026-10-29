@@ -123,12 +123,13 @@ def create_app(data_dir=None, start_worker=True):
             or request.url.path.startswith('/public/forms/')
             or request.url.path == '/api/public/events'
             or request.url.path.startswith('/assets/')
-            or request.url.path in {'/', '/favicon.ico', '/index.html'}
+            or request.url.path in {'/', '/favicon.ico', '/index.html', '/demo', '/pilot', '/embed'}
         )
         auth_public = request.url.path in {
             '/api/health',
             '/api/auth/login',
             '/api/auth/logout',
+            '/api/auth/demo',
             '/api/webhooks/engagement',
             '/api/webhooks/x',
             '/api/webhooks/facebook',
@@ -188,6 +189,8 @@ def create_app(data_dir=None, start_worker=True):
                 if render_url:
                     allowed.add(render_url.rstrip("/"))
                 allowed.update(filter(None, os.environ.get('MARKETING_ALLOWED_ORIGINS', '').split(',')))
+                allowed.add('https://vtabsquare.com')
+                allowed.add('https://www.vtabsquare.com')
 
                 is_allowed = (
                     origin_clean in allowed
@@ -206,9 +209,16 @@ def create_app(data_dir=None, start_worker=True):
                 operations.audit(request.state.actor,request,response.status_code)
         except Exception:
             pass
+        allowed_frames = os.environ.get(
+            'MARKETING_FRAME_ANCESTORS',
+            "'self' https://vtabsquare.com https://*.vtabsquare.com https://www.vtabsquare.com http://localhost:* http://127.0.0.1:*"
+        )
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "same-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = (
+            f"default-src 'self'; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline'; "
+            f"script-src 'self' 'unsafe-inline'; connect-src 'self' https:; frame-ancestors {allowed_frames}"
+        )
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
         return response
@@ -279,6 +289,21 @@ def create_app(data_dir=None, start_worker=True):
             httponly=True,
             secure=os.environ.get('MARKETING_COOKIE_SECURE', 'true').lower() == 'true',
             samesite='lax',
+            path='/'
+        )
+        return response
+
+    @app.post('/api/auth/demo')
+    def login_demo():
+        user, token = operations.get_or_create_pilot_session()
+        response = JSONResponse({'user': user, 'authenticated': True, 'roles': ROLE_DESCRIPTIONS, 'is_pilot': True})
+        response.set_cookie(
+            'marketing_session',
+            token,
+            max_age=7 * 24 * 3600,
+            httponly=True,
+            secure=True,
+            samesite='none',
             path='/'
         )
         return response
@@ -723,16 +748,24 @@ def create_app(data_dir=None, start_worker=True):
         return store.list(include_images=False)
 
     @app.post("/api/campaigns", status_code=201)
-    def create_campaign(brief: Brief):
-        return perform(lambda: controller.create(brief.model_dump()))
+    def create_campaign(brief: Brief, request: Request):
+        actor = getattr(request.state, 'actor', {})
+        brief_data = brief.model_dump()
+        if actor and (actor.get('is_pilot') or actor.get('role') == 'viewer'):
+            brief_data['_force_simulated'] = True
+        return perform(lambda: controller.create(brief_data))
 
     @app.get("/api/campaigns/{campaign_id}")
     def campaign(campaign_id: str):
         return perform(lambda: store.get(campaign_id))
 
     @app.post("/api/campaigns/{campaign_id}/approve")
-    def approve(campaign_id: str, data: Decision):
-        return perform(lambda: controller.approve(campaign_id, data.model_dump()))
+    def approve(campaign_id: str, data: Decision, request: Request):
+        actor = getattr(request.state, 'actor', {})
+        decision_data = data.model_dump()
+        if actor and actor.get('is_pilot'):
+            decision_data['action'] = 'publish_simulated'
+        return perform(lambda: controller.approve(campaign_id, decision_data))
 
     @app.post("/api/campaigns/{campaign_id}/revise")
     def revise(campaign_id: str, data: Revision):
@@ -790,6 +823,28 @@ def create_app(data_dir=None, start_worker=True):
         if not (dist / "index.html").exists():
             raise HTTPException(503, "Bundled dashboard is missing. Re-extract the complete project ZIP.")
         return FileResponse(dist / "index.html")
+
+    @app.get("/demo")
+    @app.get("/pilot")
+    @app.get("/embed")
+    def demo_embed(request: Request):
+        if not (dist / "index.html").exists():
+            raise HTTPException(503, "Bundled dashboard is missing. Re-extract the complete project ZIP.")
+        session_token = request.cookies.get('marketing_session', '')
+        actor = operations.session_user(session_token) if session_token else None
+        response = FileResponse(dist / "index.html")
+        if not actor:
+            user, token = operations.get_or_create_pilot_session()
+            response.set_cookie(
+                'marketing_session',
+                token,
+                max_age=7 * 24 * 3600,
+                httponly=True,
+                secure=True,
+                samesite='none',
+                path='/'
+            )
+        return response
 
     @app.get("/favicon.ico", include_in_schema=False)
     def favicon():

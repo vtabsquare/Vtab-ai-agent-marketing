@@ -33,6 +33,23 @@ export function Login({ onLogin }) {
     }
   }
 
+  async function handleLaunchDemo() {
+    setError('');
+    setBusy(true);
+    try {
+      const res = await api('/auth/demo', 'POST');
+      if (res && res.user) {
+        onLogin(res.user);
+      } else {
+        setError('Failed to initialize pilot demo session.');
+      }
+    } catch (err) {
+      setError(err.message || 'Could not connect to pilot demo session.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="login-screen">
       <div className="login-card">
@@ -81,6 +98,20 @@ export function Login({ onLogin }) {
             <Icon name="arrow" size={14} />
           </button>
         </form>
+
+        <div className="login-divider">
+          <span>OR</span>
+        </div>
+
+        <button
+          type="button"
+          className="button secondary full pilot-launch-btn"
+          onClick={handleLaunchDemo}
+          disabled={busy}
+        >
+          <span>🚀 Explore Interactive Pilot Demo</span>
+          <Icon name="arrow" size={14} />
+        </button>
 
         <div className="login-footer">
           <span className="status-dot" />

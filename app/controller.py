@@ -48,7 +48,8 @@ class Controller:
         if unknown: raise Conflict('Unavailable campaign destinations: '+', '.join(unknown))
         configuration['destinations']=[{'channel':channel,'state':available[channel]} for channel in selected]
         live_platforms=[channel for channel in selected if available[channel] in {'publishing_connected','fully_connected'}]
-        publishing='live' if s.get('publishing_mode')=='live' and live_platforms else 'simulation'
+        is_simulated = brief.get('_force_simulated') or s.get('publishing_mode') != 'live' or not live_platforms
+        publishing = 'simulation' if is_simulated else 'live'
         campaign=self.store.create(brief,{'brand':s['brand'],'agents':self.registry.snapshot(s),'publishing':publishing,
             'platforms':live_platforms,'image_provider':s.get('image_provider','template'),
             'hf_model':s.get('hf_model','black-forest-labs/FLUX.1-schnell'),'hf_provider':s.get('hf_provider','auto'),'configuration':configuration,'workflow':workflow})

@@ -49,7 +49,7 @@ class OperationsService:
 
     @staticmethod
     def public_user(item):
-        return {key: item[key] for key in ('id', 'email', 'name', 'role', 'active', 'created_at', 'updated_at', 'last_login_at') if key in item}
+        return {key: item[key] for key in ('id', 'email', 'name', 'role', 'is_pilot', 'active', 'created_at', 'updated_at', 'last_login_at') if key in item}
 
     def bootstrap_owner(self, password: str, email: str = 'vitabsquare@gmail.com', name: str = 'Vtab Square Owner'):
         email = (os.environ.get('MARKETING_ADMIN_EMAIL') or email).strip().lower()
@@ -87,6 +87,44 @@ class OperationsService:
             token = secrets.token_urlsafe(48); token_hash = hashlib.sha256(token.encode()).hexdigest()
             db.execute('INSERT INTO sessions(id,user_id,token_hash,created_at,expires_at) VALUES(?,?,?,?,?)',
                        (uuid.uuid4().hex, item['id'], token_hash, time.time(), time.time() + self.SESSION_TTL))
+        return self.public_user(item), token
+
+    def get_or_create_pilot_session(self, email: str = 'demo@vtabsquare.com', name: str = 'Vtab Pilot Guest'):
+        email = email.lower()
+        now = time.time()
+        with self.store.transaction() as db:
+            row = db.execute('SELECT id, payload FROM users WHERE lower(email)=lower(?)', (email,)).fetchone()
+            if row:
+                user_id = row[0]
+                item = json.loads(row[1])
+                item['last_login_at'] = now
+                item['updated_at'] = now
+                item['is_pilot'] = True
+                db.execute('UPDATE users SET updated_at=?, payload=? WHERE id=?', (now, json.dumps(item), user_id))
+            else:
+                user_id = 'usr_pilot_demo_vtab'
+                item = {
+                    'id': user_id,
+                    'email': email,
+                    'name': name,
+                    'role': 'editor',
+                    'is_pilot': True,
+                    'active': True,
+                    'created_at': now,
+                    'updated_at': now,
+                    'last_login_at': now
+                }
+                dummy_hash = _password_hash(secrets.token_urlsafe(32))
+                db.execute(
+                    'INSERT INTO users(id,email,role,active,password_hash,created_at,updated_at,payload) VALUES(?,?,?,?,?,?,?,?)',
+                    (user_id, email, 'editor', 1, dummy_hash, now, now, json.dumps(item))
+                )
+            token = secrets.token_urlsafe(48)
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            db.execute(
+                'INSERT INTO sessions(id,user_id,token_hash,created_at,expires_at) VALUES(?,?,?,?,?)',
+                (uuid.uuid4().hex, user_id, token_hash, now, now + 7 * 24 * 3600)
+            )
         return self.public_user(item), token
 
     def session_user(self, token: str):
