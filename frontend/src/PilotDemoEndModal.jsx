@@ -55,41 +55,6 @@ export function PilotDemoEndModal({ campaign, onClose, onView }) {
           </div>
         </div>
 
-        {/* What's Unlocked in Full Engine */}
-        <div className="pilot-end-features">
-          <div className="pilot-end-features-title">Unlock the Full Enterprise Engine:</div>
-          <div className="pilot-end-feature-grid">
-            <div className="pilot-end-feature-item">
-              <span className="pilot-end-feature-icon">⚡</span>
-              <div>
-                <b>Live Multi-Channel Broadcasting</b>
-                <small>Official Instagram Graph API, Facebook Graph API, WhatsApp Cloud API & LinkedIn API integration.</small>
-              </div>
-            </div>
-            <div className="pilot-end-feature-item">
-              <span className="pilot-end-feature-icon">🛡️</span>
-              <div>
-                <b>Zero-Hallucination Brand Guardian</b>
-                <small>Guarantees 100% price accuracy, factual integrity, and tone consistency on every single post.</small>
-              </div>
-            </div>
-            <div className="pilot-end-feature-item">
-              <span className="pilot-end-feature-icon">📈</span>
-              <div>
-                <b>Autonomous Performance Optimization</b>
-                <small>Real-time analytics, automated A/B headline testing, and 24-hour engagement tracking loops.</small>
-              </div>
-            </div>
-            <div className="pilot-end-feature-item">
-              <span className="pilot-end-feature-icon">💬</span>
-              <div>
-                <b>AI Community Inbox & Lead Responder</b>
-                <small>Instantly triage comments and inquiries with approved AI drafts and outbound CRM webhooks.</small>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* CTA Section */}
         <div className="pilot-end-cta-section">
           <p className="pilot-end-cta-tagline">

@@ -306,6 +306,14 @@ function App() {
   }
 
   function select(c) {
+    if (isPilot) {
+      const list = getPilotWorkflows();
+      const completedUserWf = list.find(w => w.id.startsWith('pilot_wf_') && w.state === 'COMPLETED');
+      if (completedUserWf && c.id !== completedUserWf.id) {
+        setPilotDemoEnd({ ...completedUserWf });
+        return;
+      }
+    }
     setSelected(c.id);
     setPage('workflows');
     setInbox(false);
@@ -314,6 +322,14 @@ function App() {
   }
 
   function newWorkflow() {
+    if (isPilot) {
+      const list = getPilotWorkflows();
+      const completedUserWf = list.find(w => w.id.startsWith('pilot_wf_') && w.state === 'COMPLETED');
+      if (completedUserWf) {
+        setPilotDemoEnd({ ...completedUserWf });
+        return;
+      }
+    }
     setCreateOpen(true);
     setBrief({ ...EMPTY });
     setError('');
