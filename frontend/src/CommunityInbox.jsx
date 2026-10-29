@@ -59,7 +59,7 @@ function ChannelIcon({ channel, size = 16 }) {
   return <Icon name="grid" size={size} />;
 }
 
-export function CommunityInbox({ community = [], api, act, busy, setNotice, setError }) {
+export function CommunityInbox({ community = [], api, act, busy, setNotice, setError, isPilot = false, onPilotUpdate }) {
   const [selectedChannel, setSelectedChannel] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,6 +111,14 @@ export function CommunityInbox({ community = [], api, act, busy, setNotice, setE
 
   // Sync action handler
   async function handleSync() {
+    if (isPilot) {
+      setIsSyncing(true);
+      setTimeout(() => {
+        setIsSyncing(false);
+        if (setNotice) setNotice('Synced simulated social comments. 3 active customer threads.');
+      }, 500);
+      return;
+    }
     setIsSyncing(true);
     await act(async () => {
       try {
@@ -391,14 +399,18 @@ export function CommunityInbox({ community = [], api, act, busy, setNotice, setE
                         type="button"
                         className="approve-btn"
                         disabled={busy}
-                        onClick={() =>
-                          act(() =>
-                            api('/engagement/' + item.id + '/decision', 'POST', {
-                              draft_hash: item.draft_hash,
-                              approve: true
-                            })
-                          )
-                        }
+                        onClick={() => {
+                          if (isPilot && onPilotUpdate) {
+                            onPilotUpdate(item.id, true);
+                          } else {
+                            act(() =>
+                              api('/engagement/' + item.id + '/decision', 'POST', {
+                                draft_hash: item.draft_hash,
+                                approve: true
+                              })
+                            );
+                          }
+                        }}
                       >
                         <ChannelIcon channel={platformKey} size={15} />
                         {platformKey === 'facebook'
@@ -416,14 +428,18 @@ export function CommunityInbox({ community = [], api, act, busy, setNotice, setE
                         type="button"
                         className="reject-btn"
                         disabled={busy}
-                        onClick={() =>
-                          act(() =>
-                            api('/engagement/' + item.id + '/decision', 'POST', {
-                              draft_hash: item.draft_hash,
-                              approve: false
-                            })
-                          )
-                        }
+                        onClick={() => {
+                          if (isPilot && onPilotUpdate) {
+                            onPilotUpdate(item.id, false);
+                          } else {
+                            act(() =>
+                              api('/engagement/' + item.id + '/decision', 'POST', {
+                                draft_hash: item.draft_hash,
+                                approve: false
+                              })
+                            );
+                          }
+                        }}
                       >
                         Reject
                       </button>
