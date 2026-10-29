@@ -354,7 +354,10 @@ def create_app(data_dir=None, start_worker=True):
         return FileResponse(path,media_type='application/zip',filename=path.name)
 
     @app.get('/api/notifications')
-    def notifications():
+    def notifications(request: Request):
+        actor = getattr(request.state, 'actor', {})
+        if actor and actor.get('is_pilot'):
+            return []
         items = []
         for c in store.list():
             if c['state'] in {'CANCELLED', 'COMPLETED'}:
@@ -706,7 +709,11 @@ def create_app(data_dir=None, start_worker=True):
             return {"ok": False, "connected": False, "error": str(e)}
 
     @app.get('/api/engagement')
-    def engagement(): return community.list()
+    def engagement(request: Request):
+        actor = getattr(request.state, 'actor', {})
+        if actor and actor.get('is_pilot'):
+            return []
+        return community.list()
 
     @app.post('/api/engagement/sync')
     def sync_comments():
@@ -744,7 +751,10 @@ def create_app(data_dir=None, start_worker=True):
         return registry.snapshot(store.settings())
 
     @app.get("/api/campaigns")
-    def campaigns():
+    def campaigns(request: Request):
+        actor = getattr(request.state, 'actor', {})
+        if actor and actor.get('is_pilot'):
+            return []
         return store.list(include_images=False)
 
     @app.post("/api/campaigns", status_code=201)

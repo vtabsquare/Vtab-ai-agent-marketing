@@ -43,3 +43,8 @@ def test_pilot_demo_auth_and_simulation_lock():
     assert campaign_resp.status_code == 201
     campaign = campaign_resp.json()
     assert campaign['snapshot']['publishing'] == 'simulation'
+
+    # 4. Zero leak: Pilot session must never receive DB campaigns, comments or notifications
+    assert demo_client.get('/api/campaigns').json() == []
+    assert demo_client.get('/api/engagement').json() == []
+    assert demo_client.get('/api/notifications').json() == []

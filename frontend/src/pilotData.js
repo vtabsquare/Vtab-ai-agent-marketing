@@ -4073,7 +4073,268 @@ export const INITIAL_PILOT_WORKFLOWS = [
       }
     ],
     "human_answers": {}
-  }
+  },
+{
+  "id": "pilot_wf_lead_engine_04",
+  "version": 18,
+  "brief": {
+    "title": "Vtab Square Autonomous Lead Engine",
+    "audience": "Enterprise CMOs, Marketing Directors, and Growth Founders",
+    "goal": "Demonstrate autonomous multi-channel lead capture, webhook triggers, and zero-discrepancy ROAS analytics",
+    "instructions": "Highlight multi-agent coordination, instant WhatsApp lead alerts, Brand Guardian factual verification, and unified Meta attribution",
+    "checkpoint": "creative",
+    "destinations": [
+      "linkedin",
+      "facebook",
+      "instagram",
+      "whatsapp"
+    ],
+    "audience_id": null,
+    "schedule_at": null,
+    "workflow_id": "campaign.v1"
+  },
+  "snapshot": {
+    "brand": {
+      "name": "Vtab Square",
+      "product": "Enterprise AI Marketing OS & Autonomous Campaign Engine",
+      "price": "Free 14-day trial. Custom enterprise tiers.",
+      "tone": "Authoritative, data-driven, and forward-looking",
+      "facts": "Vtab Square automates multi-channel marketing campaigns across Meta, WhatsApp, Discord and LinkedIn with deterministic Brand Guardian verification."
+    },
+    "publishing": "simulation",
+    "platforms": [
+      "linkedin",
+      "facebook",
+      "instagram",
+      "whatsapp"
+    ]
+  },
+  "state": "COMPLETED",
+  "stage": "publishing",
+  "created_at": 1792000000.0,
+  "updated_at": 1792003600.0,
+  "results": {
+    "research": {
+      "output": {
+        "summary": "High B2B demand for autonomous multi-agent campaign workflows with brand-safety gates and multi-platform attribution.",
+        "findings": [
+          {
+            "claim": "Vtab Square eliminates manual campaign orchestration across social channels.",
+            "source_ref": "brand"
+          },
+          {
+            "claim": "Deterministic Brand Guardian guarantees 100% pricing claim accuracy.",
+            "source_ref": "brand"
+          }
+        ]
+      }
+    },
+    "strategy": {
+      "output": {
+        "angle": "Autonomous Multi-Agent Marketing Engine: Enterprise-grade speed with complete brand guardrails.",
+        "tactics": [
+          "Executive-tier copy tailored for LinkedIn and Facebook",
+          "High-contrast visual brand card",
+          "Real-time WhatsApp inquiry capture workflow"
+        ]
+      }
+    },
+    "writing": {
+      "output": {
+        "headline": "Scale Multi-Channel Campaigns with Autonomous Agent Precision",
+        "price_claim": "Free 14-day trial. Custom enterprise tiers.",
+        "caption": "Eliminate marketing bottlenecks. Vtab Square deploys 10 coordinated AI specialists to plan, write, design, and publish high-converting campaigns across LinkedIn, Meta, and WhatsApp.",
+        "variants": [
+          {
+            "destination": "linkedin",
+            "headline": "The Autonomous Marketing OS Built for Enterprise Teams",
+            "body": "Orchestrate end-to-end campaigns with verified multi-agent precision. Try free for 14 days."
+          },
+          {
+            "destination": "facebook",
+            "headline": "Meet Your Autonomous AI Marketing Department",
+            "body": "From brief to published live campaign in minutes. Free 14-day trial."
+          },
+          {
+            "destination": "instagram",
+            "headline": "Autonomous AI Marketing Redefined",
+            "body": "10 AI agents. 1 Unified workspace. 100% Brand fidelity. Explore Vtab Square."
+          },
+          {
+            "destination": "whatsapp",
+            "headline": "Instant Enterprise Campaign Alert",
+            "body": "Your new multi-channel campaign is live and capturing qualified leads."
+          }
+        ]
+      }
+    },
+    "creative": {
+      "output": {
+        "headline": "Scale Multi-Channel Campaigns with Autonomous Agent Precision",
+        "art_direction": "Sleek dark neon indigo canvas with vibrant electric cyan accent (#6366f1 / #06b6d4), modular agent cards, and verified badge.",
+        "primary_hex": "#0f172a",
+        "accent_hex": "#6366f1",
+        "layout_style": "split",
+        "visual_theme": "Enterprise AI SaaS control room"
+      }
+    },
+    "brand_review": {
+      "output": {
+        "verdict": "APPROVED",
+        "rationale": "All copy variants accurately quote approved pricing ('Free 14-day trial') and core brand capabilities. Zero discrepancies found."
+      }
+    },
+    "manager": {
+      "output": {
+        "recommendation": "APPROVE",
+        "summary": "10/10 Bot tasks completed successfully. Brand fidelity verified. Approved for multi-channel dispatch."
+      }
+    },
+    "publishing": {
+      "output": {
+        "mode": "simulation",
+        "message": "Simulated live broadcast completed across LinkedIn, Facebook, Instagram, and WhatsApp.",
+        "destinations": [
+          {
+            "platform": "linkedin",
+            "status": "published_simulated",
+            "url": "https://linkedin.com/company/vtabsquare/demo"
+          },
+          {
+            "platform": "facebook",
+            "status": "published_simulated",
+            "url": "https://facebook.com/vtabsquare/posts/demo"
+          },
+          {
+            "platform": "instagram",
+            "status": "published_simulated",
+            "url": "https://instagram.com/p/demo_lead_engine"
+          },
+          {
+            "platform": "whatsapp",
+            "status": "published_simulated",
+            "url": "https://wa.me/vtabsquare"
+          }
+        ]
+      }
+    },
+    "analytics": {
+      "metrics": {
+        "mode": "simulation",
+        "impressions": 18450,
+        "engagements": 1280,
+        "engagement_rate_pct": 6.94
+      }
+    }
+  },
+  "tasks": [],
+  "events": [
+    {
+      "role": "manager",
+      "kind": "status",
+      "message": "Workflow initialized with 4 target destinations.",
+      "at": 1792000000.0
+    },
+    {
+      "role": "research",
+      "kind": "result",
+      "message": "Research Bot: Verified market positioning and price claims.",
+      "at": 1792000300.0
+    },
+    {
+      "role": "strategy",
+      "kind": "result",
+      "message": "Strategy Bot: Multi-channel blueprint generated.",
+      "at": 1792000600.0
+    },
+    {
+      "role": "writing",
+      "kind": "result",
+      "message": "Writer Bot: Tailored variants generated for LinkedIn, Facebook, Instagram, and WhatsApp.",
+      "at": 1792001200.0
+    },
+    {
+      "role": "creative",
+      "kind": "result",
+      "message": "Creative Bot: Brand Card rendered with dark indigo (#0f172a) and electric cyan.",
+      "at": 1792001400.0
+    },
+    {
+      "role": "brand_review",
+      "kind": "result",
+      "message": "Brand Guardian: 100% price fidelity verified. Zero conflicts.",
+      "at": 1792002000.0
+    },
+    {
+      "role": "manager",
+      "kind": "result",
+      "message": "Marketing Manager: Package approved for simulated live dispatch.",
+      "at": 1792002400.0
+    },
+    {
+      "role": "publishing",
+      "kind": "result",
+      "message": "Publisher Bot: Simulated live broadcast confirmed across 4 channels.",
+      "at": 1792003600.0
+    }
+  ],
+  "approval": null,
+  "error": null,
+  "nodes": {
+    "research": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "strategy": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "writing": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "creative": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "brand_review": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "manager": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "publishing": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "analytics": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "optimization": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    },
+    "engagement": {
+      "state": "ACCEPTED",
+      "attempt": 1,
+      "error": null
+    }
+  },
+  "input_requests": [],
+  "human_answers": {}
+}
 ];
 
 export const INITIAL_PILOT_COMMUNITY = [
@@ -4115,12 +4376,25 @@ export const INITIAL_PILOT_COMMUNITY = [
       sentiment: 'interested',
       draft_reply: 'Hello! Yes, Vtab Square includes outbound webhooks and instant WhatsApp notification triggers for every qualified lead captured by your campaigns.'
     }
+  },
+  {
+    id: 'cm_li_pilot_4',
+    platform: 'linkedin',
+    author: 'Elena Rostova · VP Marketing',
+    text: 'Can this AI engine automatically generate branded SVG creative assets and draft copy for enterprise campaigns?',
+    state: 'AWAITING_APPROVAL',
+    created_at: Date.now() - 900000,
+    output: {
+      category: 'enterprise_capabilities',
+      sentiment: 'positive',
+      draft_reply: 'Hi Elena! Yes, Vtab Square generates vector-perfect responsive SVGs, platform-adapted copy variants for LinkedIn, Instagram, Facebook and WhatsApp, all verified with our Brand Guardian.'
+    }
   }
 ];
 
-const WORKFLOWS_KEY = 'vtab_pilot_workflows_v1';
-const BRAND_KEY = 'vtab_pilot_brand_v1';
-const COMMUNITY_KEY = 'vtab_pilot_community_v1';
+const WORKFLOWS_KEY = 'vtab_pilot_workflows_v2';
+const BRAND_KEY = 'vtab_pilot_brand_v2';
+const COMMUNITY_KEY = 'vtab_pilot_community_v2';
 
 export function getPilotWorkflows() {
   try {

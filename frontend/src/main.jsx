@@ -46,7 +46,8 @@ function App() {
     window.location.pathname.includes('/embed') ||
     window.location.search.includes('demo=') ||
     window.location.search.includes('pilot=') ||
-    window.location.search.includes('embed=')
+    window.location.search.includes('embed=') ||
+    (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('vtab_pilot_session') === '1')
   );
 
   const [celebrationCampaign, setCelebrationCampaign] = useState(null);
@@ -76,13 +77,18 @@ function App() {
   const [revision, setRevision] = useState('');
   const [inbox, setInbox] = useState(false);
 
-  const current = workflows.find(c => c.id === selected);
+  const effectiveWorkflows = isPilot ? getPilotWorkflows() : workflows;
+  const effectiveCommunity = isPilot ? getPilotCommunity() : community;
+  const effectiveNotifications = isPilot ? [] : notifications;
+
+  const current = effectiveWorkflows.find(c => c.id === selected);
   const feedEnd = useRef(null);
   const feedBox = useRef(null);
   const follow = useRef(true);
 
-  async function refresh() {
-    if (isPilot) {
+  async function refresh(forcePilot) {
+    const activePilot = typeof forcePilot === 'boolean' ? forcePilot : isPilot;
+    if (activePilot) {
       let s;
       try {
         s = await api('/settings');
@@ -134,6 +140,9 @@ function App() {
     try {
       const res = await api('/auth/me');
       const pilotCheck = Boolean(res.user?.is_pilot || isPilotUrl);
+      if (pilotCheck) {
+        try { sessionStorage.setItem('vtab_pilot_session', '1'); } catch (e) {}
+      }
       setAuth({
         authenticated: res.authenticated,
         user: pilotCheck
@@ -145,14 +154,16 @@ function App() {
             }
           : res.user
       });
-      if (res.authenticated) await refresh();
+      if (res.authenticated) await refresh(pilotCheck);
     } catch (e) {
       if (isPilotUrl) {
         try {
           const r = await api('/auth/demo', 'POST');
+          try { sessionStorage.setItem('vtab_pilot_session', '1'); } catch (err) {}
           setAuth({ authenticated: true, user: { ...r.user, is_pilot: true } });
-          await refresh();
+          await refresh(true);
         } catch (err) {
+          try { sessionStorage.setItem('vtab_pilot_session', '1'); } catch (err2) {}
           setAuth({
             authenticated: true,
             user: {
@@ -163,7 +174,7 @@ function App() {
               is_pilot: true
             }
           });
-          await refresh();
+          await refresh(true);
         }
       } else {
         setAuth({ authenticated: false, user: null });
@@ -314,7 +325,8 @@ function App() {
   }
 
   function handlePilotCommunityDecision(targetId, approve) {
-    const updated = community.map(item => {
+    const list = getPilotCommunity();
+    const updated = list.map(item => {
       if (item.id === targetId) {
         const copy = { ...item, state: approve ? 'APPROVED' : 'REJECTED' };
         if (approve) {
@@ -327,6 +339,9 @@ function App() {
           } else if (copy.platform === 'whatsapp') {
             copy.whatsapp_reply_posted = true;
             copy.whatsapp_reply_id = 'sim_wa_msg_' + Math.random().toString(36).substr(2, 6);
+          } else if (copy.platform === 'linkedin') {
+            copy.linkedin_reply_posted = true;
+            copy.linkedin_reply_id = 'sim_li_rep_' + Math.random().toString(36).substr(2, 6);
           }
         }
         return copy;
@@ -334,12 +349,13 @@ function App() {
       return item;
     });
     savePilotCommunity(updated);
-    setCommunity(updated);
+    setCommunity(getPilotCommunity());
     setNotice(approve ? 'Simulated reply approved and dispatched!' : 'Simulated draft rejected.');
     setTimeout(() => setNotice(''), 3000);
   }
 
-  const active = workflows.filter(c => !['COMPLETED', 'CANCELLED'].includes(c.state)).length;
+  const active = effectiveWorkflows.filter(c => !['COMPLETED', 'CANCELLED'].includes(c.state)).length;
+  const completed = effectiveWorkflows.filter(c => c.state === 'COMPLETED').length;
   const openRequests = current?.input_requests?.filter(q => q.status === 'OPEN') || [];
   const blocked = current ? Object.entries(current.nodes || {}).filter(([r, n]) => n.state === 'BLOCKED') : [];
   const shownEvents = current?.events?.filter(e => !focusedBot || e.actor === focusedBot || e.target === focusedBot) || [];
@@ -385,7 +401,7 @@ function App() {
           className={'navigation ' + (page === 'workflows' ? 'is-active' : '')}
           onClick={() => { setPage('workflows'); setSelected(null); }}
         >
-          <Icon name="grid" />Workflows<span className="count">{workflows.length}</span>
+          <Icon name="grid" />Workflows<span className="count">{effectiveWorkflows.length}</span>
         </button>
 
         <button className="new-workflow" onClick={newWorkflow}>
@@ -404,7 +420,7 @@ function App() {
           onClick={() => setPage('community')}
         >
           <Icon name="chat" />Community
-          <span className="count">{community.filter(e => e.state === 'AWAITING_APPROVAL').length}</span>
+          <span className="count">{effectiveCommunity.filter(e => e.state === 'AWAITING_APPROVAL').length}</span>
         </button>
 
         <div className="nav-label workflow-label">
@@ -412,7 +428,7 @@ function App() {
         </div>
 
         <div className="workflow-nav">
-          {workflows.map(c => (
+          {effectiveWorkflows.map(c => (
             <button
               className={c.id === selected && page === 'workflows' ? 'selected' : ''}
               key={c.id}
@@ -426,7 +442,7 @@ function App() {
               {c.input_requests?.some(q => q.status === 'OPEN') && <span className="tiny-alert">!</span>}
             </button>
           ))}
-          {!workflows.length && <p>Your workflows will appear here.</p>}
+          {!effectiveWorkflows.length && <p>Your workflows will appear here.</p>}
         </div>
 
         {!isPilot && (
@@ -439,7 +455,7 @@ function App() {
               Your input
               <small>{notifications.length ? 'Bots are waiting for you' : 'No open requests'}</small>
             </div>
-            <b>{notifications.length}</b>
+            <b>{effectiveNotifications.length}</b>
           </button>
         )}
 
@@ -514,7 +530,7 @@ function App() {
                 onClick={() => setInbox(!inbox)}
               >
                 <Icon name="bell" />
-                {notifications.length > 0 && <b>{notifications.length}</b>}
+                {notifications.length > 0 && <b>{effectiveNotifications.length}</b>}
               </button>
             )}
             <span className="owner-avatar" title={auth.user?.email}>
@@ -561,7 +577,7 @@ function App() {
                 <button
                   key={q.id}
                   onClick={() => {
-                    const c = workflows.find(item => item.id === q.campaign_id);
+                    const c = effectiveWorkflows.find(item => item.id === q.campaign_id);
                     if (c) select(c);
                   }}
                   className="notification-item"
@@ -588,7 +604,7 @@ function App() {
 
         {page === 'community' ? (
           <CommunityInbox
-            community={community}
+            community={effectiveCommunity}
             api={api}
             act={act}
             busy={busy}
@@ -1393,7 +1409,7 @@ function App() {
               {!isPilot && (
                 <div>
                   <span className="metric-icon orange"><Icon name="bell" /></span>
-                  <b>{notifications.length}</b>
+                  <b>{effectiveNotifications.length}</b>
                   <p>Waiting for you<small>Answer to resume a bot</small></p>
                 </div>
               )}
@@ -1410,7 +1426,7 @@ function App() {
 
               <div>
                 <span className="metric-icon"><Icon name="check" /></span>
-                <b>{workflows.filter(c => c.state === 'COMPLETED').length}</b>
+                <b>{completed}</b>
                 <p>Completed<small>Saved with their results</small></p>
               </div>
             </div>
@@ -1436,9 +1452,9 @@ function App() {
               </button>
             </div>
 
-            {workflows.length ? (
+            {effectiveWorkflows.length ? (
               <div className="workflow-cards">
-                {workflows.map(c => (
+                {effectiveWorkflows.map(c => (
                   <button className="workflow-card" key={c.id} onClick={() => select(c)}>
                     <div className="workflow-card-top">
                       <span className={'pill ' + (c.state || '').toLowerCase()}>{STATUS[c.state] || c.state}</span>
@@ -1502,7 +1518,7 @@ function App() {
             <button
               onClick={() => {
                 shownAttentionId.current = null;
-                const c = workflows.find(item => item.id === attention.campaign_id);
+                const c = effectiveWorkflows.find(item => item.id === attention.campaign_id);
                 if (c) select(c);
                 setAttention(null);
               }}
